@@ -2,7 +2,8 @@ import axios from 'axios';
 import { Usuario, Cliente, Produto, Venda, FormaPagamento, Categoria } from '../types';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/api',  
+  withCredentials: true,
 });
 
 export const authService = {

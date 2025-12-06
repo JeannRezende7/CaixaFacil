@@ -1,6 +1,4 @@
 package com.vendeja.pdv.controller;
-
-import com.vendeja.pdv.model.Usuario;
 import com.vendeja.pdv.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

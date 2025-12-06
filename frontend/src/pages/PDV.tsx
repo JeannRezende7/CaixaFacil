@@ -21,6 +21,7 @@ export default function PDV() {
   const [codigoProduto, setCodigoProduto] = useState('');
   const [codigoCliente, setCodigoCliente] = useState('');
   const [cliente, setCliente] = useState<Cliente | null>(null);
+  const [produtoAtual, setProdutoAtual] = useState<Produto | null>(null);
   const [itens, setItens] = useState<VendaItem[]>([]);
   const [itemSelecionado, setItemSelecionado] = useState<number>(-1);
   const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
@@ -62,8 +63,10 @@ export default function PDV() {
         setControlarCaixa(res.data.controlarCaixa || false);
         
         // Carregar cliente padrão se configurado
-        if (res.data.clientePadraoId) {
-          carregarClientePadrao(res.data.clientePadraoId);
+        if (res.data.clientePadrao) {
+          setCliente(res.data.clientePadrao);
+          setCodigoCliente(res.data.clientePadrao.codigo || '');
+          console.log('Cliente padrão carregado:', res.data.clientePadrao.nome);
         }
       })
       .catch(err => console.error('Erro ao carregar configuração:', err));
@@ -99,13 +102,16 @@ export default function PDV() {
     if (!codigo.trim()) return;
     
     try {
-      const res = await produtoService.buscarPorCodigo(codigo);
+      // Busca inteligente com padding automático
+      const res = await axios.get(`http://localhost:8080/api/produtos/buscar-parcial/${codigo}`);
+      setProdutoAtual(res.data);
       adicionarItem(res.data);
       setCodigoProduto('');
       inputProdutoRef.current?.focus();
     } catch (error) {
       showError('Produto não encontrado');
       setCodigoProduto('');
+      setProdutoAtual(null);
     }
   };
 
@@ -116,8 +122,10 @@ export default function PDV() {
     }
     
     try {
-      const res = await clienteService.buscarPorCodigo(codigo);
+      // Busca inteligente com padding automático
+      const res = await axios.get(`http://localhost:8080/api/clientes/buscar-parcial/${codigo}`);
       setCliente(res.data);
+      setCodigoCliente(res.data.codigo);
     } catch (error) {
       showError('Cliente não encontrado');
       setCodigoCliente('');
@@ -348,8 +356,9 @@ export default function PDV() {
     setItens([]);
     
     // Se tem cliente padrão configurado, recarregar ele
-    if (empresa?.clientePadraoId) {
-      carregarClientePadrao(empresa.clientePadraoId);
+    if (empresa?.clientePadrao) {
+      setCliente(empresa.clientePadrao);
+      setCodigoCliente(empresa.clientePadrao.codigo || '');
     } else {
       setCliente(null);
       setCodigoCliente('');
@@ -439,25 +448,37 @@ export default function PDV() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold mb-1">Código do Produto</label>
-                <div className="flex gap-2">
-                  <input
-                    ref={inputProdutoRef}
-                    type="text"
-                    value={codigoProduto}
-                    onChange={(e) => setCodigoProduto(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') buscarProduto(codigoProduto);
-                    }}
-                    className="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Digite o código ou use o leitor"
-                    autoFocus
-                  />
-                  <button
-                    onClick={() => buscarProduto(codigoProduto)}
-                    className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600"
-                  >
-                    🔍
-                  </button>
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1 flex gap-2">
+                    <input
+                      ref={inputProdutoRef}
+                      type="text"
+                      value={codigoProduto}
+                      onChange={(e) => setCodigoProduto(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') buscarProduto(codigoProduto);
+                      }}
+                      className="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="Digite o código ou use o leitor"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => buscarProduto(codigoProduto)}
+                      className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600"
+                    >
+                      🔍
+                    </button>
+                  </div>
+                  
+                  {produtoAtual?.fotoPath && (
+                    <div className="w-20 h-20 border-2 border-gray-300 rounded overflow-hidden flex items-center justify-center bg-gray-50">
+                      <img 
+                        src={`http://localhost:8080/uploads/produtos/${produtoAtual.fotoPath}`}
+                        alt="Foto do Produto" 
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               

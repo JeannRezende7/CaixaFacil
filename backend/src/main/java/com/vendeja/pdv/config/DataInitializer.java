@@ -68,9 +68,10 @@ public class DataInitializer implements CommandLineRunner {
         if (config.getId() == null) {
             config.setControlarCaixa(false);
             if (clientePadrao != null) {
-           //     config.setClientePadrao(clientePadrao); mexer
+                config.setClientePadrao(clientePadrao);
             }
             configuracaoRepository.save(config);
+            System.out.println("Configuração criada com cliente padrão!");
         }
 
         // 4. Criar categoria Geral
@@ -101,41 +102,71 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("Produto exemplo criado!");
         }
 
-        // 6. Criar formas de pagamento
+        // 6. Criar formas de pagamento com CATEGORIAS
         if (formaPagamentoRepository.count() == 0) {
-            // DI = DINHEIRO
+            // CATEGORIA: DINHEIRO
             FormaPagamento dinheiro = new FormaPagamento();
             dinheiro.setDescricao("DINHEIRO");
             dinheiro.setTipoPagamento("DI");
+            dinheiro.setCategoria("DINHEIRO");
             dinheiro.setAtivo(true);
             dinheiro.setPermiteParcelamento(false);
             formaPagamentoRepository.save(dinheiro);
 
-            // PI = PIX
+            // CATEGORIA: PIX
             FormaPagamento pix = new FormaPagamento();
             pix.setDescricao("PIX");
             pix.setTipoPagamento("PI");
+            pix.setCategoria("PIX");
             pix.setAtivo(true);
             pix.setPermiteParcelamento(false);
             formaPagamentoRepository.save(pix);
 
-            // CD = CARTÃO DÉBITO
+            // CATEGORIA: CARTAO
             FormaPagamento cartaoDebito = new FormaPagamento();
             cartaoDebito.setDescricao("CARTÃO DÉBITO");
             cartaoDebito.setTipoPagamento("CD");
+            cartaoDebito.setCategoria("CARTAO");
             cartaoDebito.setAtivo(true);
             cartaoDebito.setPermiteParcelamento(false);
             formaPagamentoRepository.save(cartaoDebito);
 
-            // CC = CARTÃO CRÉDITO
             FormaPagamento cartaoCredito = new FormaPagamento();
             cartaoCredito.setDescricao("CARTÃO CRÉDITO");
             cartaoCredito.setTipoPagamento("CC");
+            cartaoCredito.setCategoria("CARTAO");
             cartaoCredito.setAtivo(true);
-            cartaoCredito.setPermiteParcelamento(true);
+            cartaoCredito.setPermiteParcelamento(false);
             formaPagamentoRepository.save(cartaoCredito);
 
-            System.out.println("Formas de pagamento criadas!");
+            // CATEGORIA: PARCELADO
+            FormaPagamento parcelado = new FormaPagamento();
+            parcelado.setDescricao("CRÉDITO PARCELADO");
+            parcelado.setTipoPagamento("CP");
+            parcelado.setCategoria("PARCELADO");
+            parcelado.setAtivo(true);
+            parcelado.setPermiteParcelamento(true);
+            formaPagamentoRepository.save(parcelado);
+
+            // CATEGORIA: TICKET
+            FormaPagamento ticket = new FormaPagamento();
+            ticket.setDescricao("TICKET ALIMENTAÇÃO");
+            ticket.setTipoPagamento("TI");
+            ticket.setCategoria("TICKET");
+            ticket.setAtivo(true);
+            ticket.setPermiteParcelamento(false);
+            formaPagamentoRepository.save(ticket);
+
+            // CATEGORIA: VALE
+            FormaPagamento vale = new FormaPagamento();
+            vale.setDescricao("VALE REFEIÇÃO");
+            vale.setTipoPagamento("VL");
+            vale.setCategoria("VALE");
+            vale.setAtivo(true);
+            vale.setPermiteParcelamento(false);
+            formaPagamentoRepository.save(vale);
+
+            System.out.println("Formas de pagamento criadas com categorias!");
         }
     }
 }

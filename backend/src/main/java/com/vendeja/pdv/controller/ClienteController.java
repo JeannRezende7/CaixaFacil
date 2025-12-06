@@ -2,7 +2,6 @@ package com.vendeja.pdv.controller;
 
 import com.vendeja.pdv.model.Cliente;
 import com.vendeja.pdv.repository.ClienteRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,72 +10,88 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/clientes")
-@RequiredArgsConstructor
 public class ClienteController {
-    
+
     private final ClienteRepository clienteRepository;
-    
+
+    public ClienteController(ClienteRepository clienteRepository) {
+        this.clienteRepository = clienteRepository;
+    }
+
     @GetMapping
     public List<Cliente> listar() {
         return clienteRepository.findAll();
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<Cliente> buscarPorId(@PathVariable Long id) {
         return clienteRepository.findById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
-    
-    @GetMapping("/codigo/{codigo}")
+
+    @GetMapping("/buscar/{codigo}")
     public ResponseEntity<Cliente> buscarPorCodigo(@PathVariable String codigo) {
         return clienteRepository.findByCodigo(codigo)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
-    
+
+    // NOVO: Busca parcial com LIKE
+    @GetMapping("/buscar-parcial/{codigo}")
+    public ResponseEntity<Cliente> buscarPorCodigoParcial(@PathVariable String codigo) {
+        // Formata código com zeros à esquerda
+        String codigoFormatado = String.format("%06d", Integer.parseInt(codigo));
+        
+        return clienteRepository.findByCodigo(codigoFormatado)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     public ResponseEntity<Cliente> criar(@RequestBody Cliente cliente) {
-        // Aplicar padding de 6 dígitos no código
+        // Formatar código com 6 dígitos
         if (cliente.getCodigo() != null && !cliente.getCodigo().isEmpty()) {
             try {
                 int numero = Integer.parseInt(cliente.getCodigo());
                 cliente.setCodigo(String.format("%06d", numero));
             } catch (NumberFormatException e) {
-                // Se não for número, mantém como está
+                // Mantém como está se não for número
             }
         }
         
         cliente.setDataCadastro(LocalDateTime.now());
-        return ResponseEntity.ok(clienteRepository.save(cliente));
+        Cliente saved = clienteRepository.save(cliente);
+        return ResponseEntity.ok(saved);
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<Cliente> atualizar(@PathVariable Long id, @RequestBody Cliente cliente) {
         if (!clienteRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         
-        // Aplicar padding de 6 dígitos no código
+        // Formatar código com 6 dígitos
         if (cliente.getCodigo() != null && !cliente.getCodigo().isEmpty()) {
             try {
                 int numero = Integer.parseInt(cliente.getCodigo());
                 cliente.setCodigo(String.format("%06d", numero));
             } catch (NumberFormatException e) {
-                // Se não for número, mantém como está
+                // Mantém como está se não for número
             }
         }
         
         cliente.setId(id);
-        return ResponseEntity.ok(clienteRepository.save(cliente));
+        Cliente updated = clienteRepository.save(cliente);
+        return ResponseEntity.ok(updated);
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         if (!clienteRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         clienteRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }
