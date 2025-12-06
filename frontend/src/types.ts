@@ -1,11 +1,27 @@
-// src/types.ts
-export type StatusNfe =
-  | 'NAO_EMITIDA'
-  | 'PENDENTE'
-  | 'AUTORIZADA'
-  | 'CANCELADA'
-  | 'DENEGADA'
-  | 'INUTILIZADA';
+export interface Usuario {
+  id?: number;
+  login: string;
+  senha: string;
+  nome: string;
+  admin: boolean;
+  ativo: boolean;
+  dataCadastro?: string;
+}
+
+export interface Cliente {
+  id?: number;
+  codigo?: string;
+  nome: string;
+  cpfCnpj?: string;
+  telefone?: string;
+  email?: string;
+  endereco?: string;
+  cidade?: string;
+  uf?: string;
+  cep?: string;
+  ativo: boolean;
+  dataCadastro?: string;
+}
 
 export interface Categoria {
   id?: number;
@@ -18,87 +34,58 @@ export interface Produto {
   codigo: string;
   descricao: string;
   unidade: string;
+  categoria?: Categoria;
   precoVenda: number;
   precoCusto: number;
   estoque: number;
   estoqueMinimo: number;
   controlarEstoque: boolean;
   ativo: boolean;
-  ncm?: string;
-  cest?: string;
-  cfopVenda?: string;
-  origem?: string;
-  cst?: string;
-  csosn?: string;
-  aliquotaICMS?: number;
-  aliquotaPIS?: number;
-  aliquotaCOFINS?: number;
-  gtin?: string;
-  descricaoNFe?: string;
+  observacoes?: string;
+  dataCadastro?: string;
+  codigosAlternativos?: ProdutoCodigo[];
 }
 
-export interface Cliente {
+export interface ProdutoCodigo {
   id?: number;
-  codigo?: string;
-  nome: string;
-  cpfCnpj?: string;
-  telefone?: string;
-  email?: string;
-  ativo: boolean;
-  tipoPessoa?: 'F' | 'J';
-  inscricaoEstadual?: string;
-  indicadorIE?: '1' | '2' | '9';
-  logradouro?: string;
-  numero?: string;
-  bairro?: string;
-  municipio?: string;
-  uf?: string;
-  cep?: string;
-}
-
-export interface Usuario {
-  id?: number;
-  login: string;
-  senha?: string;
-  nome: string;
-  admin: boolean;
-  ativo: boolean;
+  codigo: string;
+  descricao?: string;
 }
 
 export interface FormaPagamento {
-  id: number;
+  id?: number;
   descricao: string;
   tipoPagamento: string;
   permiteParcelamento: boolean;
   ativo: boolean;
-  integraTef?: boolean;
-  geraFinanceiro?: boolean;
 }
 
 export interface VendaItem {
   id?: number;
   produto: Produto;
+  sequencia?: number;
   quantidade: number;
   precoUnitario: number;
   descontoPercentual?: number;
   descontoValor?: number;
+  acrescimoPercentual?: number;
+  acrescimoValor?: number;
   total: number;
-  ncm?: string;
-  cfop?: string;
-  cst?: string;
-  csosn?: string;
-  aliquotaICMS?: number;
-  aliquotaPIS?: number;
-  aliquotaCOFINS?: number;
+}
+
+export interface VendaPagamento {
+  id?: number;
+  formaPagamento?: FormaPagamento;
+  valor: number;
+  troco: number;
 }
 
 export interface Venda {
   id?: number;
   numeroDocumento?: number;
-  dataHora?: string;
-  cliente?: Cliente | null;
+  cliente?: Cliente;
   usuario: Usuario;
-  formaPagamento?: FormaPagamento | null;
+  dataHora?: string;
   subtotal: number;
   descontoPercentual?: number;
   descontoValor?: number;
@@ -106,12 +93,11 @@ export interface Venda {
   acrescimoValor?: number;
   frete?: number;
   total: number;
+  valorPago?: number;
+  troco?: number;
+  formaPagamento?: FormaPagamento; // Mantido por compatibilidade
+  pagamentos?: VendaPagamento[];
   observacoes?: string;
-  itens?: VendaItem[];
-  statusNfe?: StatusNfe;
-  chaveNfe?: string;
-  numeroNfe?: number;
-  serieNfe?: number;
-  protocoloNfe?: string;
-  dataAutorizacaoNfe?: string;
+  cancelada: boolean;
+  itens: VendaItem[];
 }

@@ -5,6 +5,8 @@ import com.vendeja.pdv.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -33,14 +35,20 @@ public class ClienteController {
             .orElse(ResponseEntity.notFound().build());
     }
     
-    @GetMapping("/buscar")
-    public List<Cliente> buscar(@RequestParam String q) {
-        return clienteRepository.findByNomeContainingIgnoreCase(q);
-    }
-    
     @PostMapping
-    public Cliente criar(@RequestBody Cliente cliente) {
-        return clienteRepository.save(cliente);
+    public ResponseEntity<Cliente> criar(@RequestBody Cliente cliente) {
+        // Aplicar padding de 6 dígitos no código
+        if (cliente.getCodigo() != null && !cliente.getCodigo().isEmpty()) {
+            try {
+                int numero = Integer.parseInt(cliente.getCodigo());
+                cliente.setCodigo(String.format("%06d", numero));
+            } catch (NumberFormatException e) {
+                // Se não for número, mantém como está
+            }
+        }
+        
+        cliente.setDataCadastro(LocalDateTime.now());
+        return ResponseEntity.ok(clienteRepository.save(cliente));
     }
     
     @PutMapping("/{id}")
@@ -48,6 +56,17 @@ public class ClienteController {
         if (!clienteRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        
+        // Aplicar padding de 6 dígitos no código
+        if (cliente.getCodigo() != null && !cliente.getCodigo().isEmpty()) {
+            try {
+                int numero = Integer.parseInt(cliente.getCodigo());
+                cliente.setCodigo(String.format("%06d", numero));
+            } catch (NumberFormatException e) {
+                // Se não for número, mantém como está
+            }
+        }
+        
         cliente.setId(id);
         return ResponseEntity.ok(clienteRepository.save(cliente));
     }
@@ -58,6 +77,6 @@ public class ClienteController {
             return ResponseEntity.notFound().build();
         }
         clienteRepository.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 }

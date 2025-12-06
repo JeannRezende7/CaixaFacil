@@ -5,6 +5,7 @@ import Cadastros from './pages/Cadastros';
 import Vendas from './pages/Vendas';
 import ConfiguracaoEmpresa from './pages/ConfiguracaoEmpresa';
 import { NotificationProvider } from './contexts/NotificationContext';
+import Caixa from './pages/Caixa';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/cadastros" element={<Cadastros />} />
           <Route path="/vendas" element={<Vendas />} />
           <Route path="/configuracao" element={<ConfiguracaoEmpresa />} />
+          <Route path="/caixa" element={<Caixa />} />
         </Routes>
       </BrowserRouter>
     </NotificationProvider>

@@ -52,4 +52,9 @@ public class Configuracao {
     
     // Configurações de Venda
     private Long clientePadraoId;
+    
+    // Controle de Caixa
+    private Boolean controlarCaixa = false;
+
+    
 }

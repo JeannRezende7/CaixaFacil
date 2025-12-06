@@ -1,15 +1,12 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
-type NotificationType = 'success' | 'error' | 'warning' | 'info';
-
 interface Notification {
-  id: string;
-  type: NotificationType;
+  id: number;
   message: string;
+  type: 'success' | 'error' | 'warning' | 'info';
 }
 
 interface NotificationContextType {
-  showNotification: (message: string, type?: NotificationType, duration?: number) => void;
   showSuccess: (message: string) => void;
   showError: (message: string) => void;
   showWarning: (message: string) => void;
@@ -29,70 +26,54 @@ export const useNotification = () => {
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const showNotification = useCallback((message: string, type: NotificationType = 'info', duration: number = 3000) => {
-    const id = Date.now().toString();
-    setNotifications(prev => [...prev, { id, type, message }]);
+  const addNotification = useCallback((message: string, type: Notification['type']) => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message, type }]);
 
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
-    }, duration);
+    }, 4000);
   }, []);
 
-  const showSuccess = useCallback((message: string) => {
-    showNotification(message, 'success');
-  }, [showNotification]);
+  const showSuccess = useCallback((message: string) => addNotification(message, 'success'), [addNotification]);
+  const showError = useCallback((message: string) => addNotification(message, 'error'), [addNotification]);
+  const showWarning = useCallback((message: string) => addNotification(message, 'warning'), [addNotification]);
+  const showInfo = useCallback((message: string) => addNotification(message, 'info'), [addNotification]);
 
-  const showError = useCallback((message: string) => {
-    showNotification(message, 'error', 5000);
-  }, [showNotification]);
-
-  const showWarning = useCallback((message: string) => {
-    showNotification(message, 'warning', 4000);
-  }, [showNotification]);
-
-  const showInfo = useCallback((message: string) => {
-    showNotification(message, 'info');
-  }, [showNotification]);
-
-  const getIcon = (type: NotificationType) => {
+  const getBackgroundColor = (type: Notification['type']) => {
     switch (type) {
-      case 'success': return '✓';
-      case 'error': return '✕';
-      case 'warning': return '⚠';
-      case 'info': return 'ℹ';
+      case 'success': return 'bg-green-500';
+      case 'error': return 'bg-red-500';
+      case 'warning': return 'bg-yellow-500';
+      case 'info': return 'bg-blue-500';
+      default: return 'bg-gray-500';
     }
   };
 
-  const getColors = (type: NotificationType) => {
+  const getIcon = (type: Notification['type']) => {
     switch (type) {
-      case 'success': return 'bg-green-500 border-green-600';
-      case 'error': return 'bg-red-500 border-red-600';
-      case 'warning': return 'bg-yellow-500 border-yellow-600';
-      case 'info': return 'bg-blue-500 border-blue-600';
+      case 'success': return '✓';
+      case 'error': return '✗';
+      case 'warning': return '⚠';
+      case 'info': return 'ℹ';
+      default: return '';
     }
   };
 
   return (
-    <NotificationContext.Provider value={{ showNotification, showSuccess, showError, showWarning, showInfo }}>
+    <NotificationContext.Provider value={{ showSuccess, showError, showWarning, showInfo }}>
       {children}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] space-y-2">
-        {notifications.map(notification => (
+      
+      {/* Container de notificações - POSIÇÃO TOP CENTER */}
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-2 w-full max-w-md px-4">
+        {notifications.map((notification) => (
           <div
             key={notification.id}
-            className={`${getColors(notification.type)} text-white px-8 py-6 rounded-lg shadow-2xl border-l-4 min-w-[400px] max-w-[600px] animate-scale-in`}
+            className={`${getBackgroundColor(notification.type)} text-white px-6 py-4 rounded-lg shadow-2xl 
+                       animate-slideDown flex items-center gap-3 border-2 border-white`}
           >
-            <div className="flex items-start gap-4">
-              <div className="text-3xl font-bold">{getIcon(notification.type)}</div>
-              <div className="flex-1">
-                <p className="font-semibold text-lg leading-relaxed">{notification.message}</p>
-              </div>
-              <button
-                onClick={() => setNotifications(prev => prev.filter(n => n.id !== notification.id))}
-                className="text-white hover:text-gray-200 text-2xl font-bold"
-              >
-                ×
-              </button>
-            </div>
+            <span className="text-2xl font-bold">{getIcon(notification.type)}</span>
+            <span className="flex-1 font-semibold text-lg">{notification.message}</span>
           </div>
         ))}
       </div>

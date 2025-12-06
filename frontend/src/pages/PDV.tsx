@@ -30,6 +30,10 @@ export default function PDV() {
   const [mostrarCupom, setMostrarCupom] = useState(false);
   const [vendaFinalizada, setVendaFinalizada] = useState<any>(null);
   
+  // CONTROLE DE CAIXA
+  const [caixaAberto, setCaixaAberto] = useState(false);
+  const [controlarCaixa, setControlarCaixa] = useState(false);
+  
   const [descontoGlobalPerc, setDescontoGlobalPerc] = useState('0');
   const [descontoGlobalValor, setDescontoGlobalValor] = useState('0');
   const [acrescimoGlobalPerc, setAcrescimoGlobalPerc] = useState('0');
@@ -55,6 +59,8 @@ export default function PDV() {
     axios.get('http://localhost:8080/api/configuracao')
       .then(res => {
         setEmpresa(res.data);
+        setControlarCaixa(res.data.controlarCaixa || false);
+        
         // Carregar cliente padrão se configurado
         if (res.data.clientePadraoId) {
           carregarClientePadrao(res.data.clientePadraoId);
@@ -62,6 +68,22 @@ export default function PDV() {
       })
       .catch(err => console.error('Erro ao carregar configuração:', err));
   }, []);
+
+  // Verificar status do caixa
+  useEffect(() => {
+    if (controlarCaixa) {
+      verificarStatusCaixa();
+    }
+  }, [controlarCaixa]);
+
+  const verificarStatusCaixa = async () => {
+    try {
+      const res = await axios.get('http://localhost:8080/api/caixa/status');
+      setCaixaAberto(res.data.caixaAberto);
+    } catch (error) {
+      console.error('Erro ao verificar caixa:', error);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -233,6 +255,13 @@ export default function PDV() {
       showWarning('Adicione itens à venda');
       return;
     }
+    
+    // VALIDAR CAIXA ABERTO
+    if (controlarCaixa && !caixaAberto) {
+      showError('Não é possível finalizar venda sem caixa aberto!');
+      return;
+    }
+    
     setMostrarModalPagamento(true);
   };
 
@@ -292,6 +321,11 @@ export default function PDV() {
       setVendaFinalizada(vendaCompleta);
       setMostrarCupom(true);
       limparVenda();
+      
+      // Atualizar status do caixa após venda
+      if (controlarCaixa) {
+        verificarStatusCaixa();
+      }
     } catch (error: any) {
       console.error('Erro:', error);
       let mensagem = 'Erro desconhecido';
@@ -345,9 +379,30 @@ export default function PDV() {
           <h1 className="text-2xl font-bold">
             {empresa?.nomeFantasia || 'VendeJá PDV'}
           </h1>
+          
+          {/* INDICADOR DE CAIXA */}
+          {controlarCaixa && (
+            <div className={`px-3 py-1 rounded font-bold text-sm ${
+              caixaAberto ? 'bg-green-500' : 'bg-red-500'
+            }`}>
+              {caixaAberto ? '✓ CAIXA ABERTO' : '✗ CAIXA FECHADO'}
+            </div>
+          )}
         </div>
-        <div className="flex gap-4 items-center">
-          <span>Operador: {usuario?.nome}</span>
+        
+        <div className="flex gap-2 items-center">
+          <span className="mr-4">Operador: {usuario?.nome}</span>
+          
+          {/* BOTÃO CAIXA */}
+          {controlarCaixa && (
+            <button
+              onClick={() => navigate('/caixa')}
+              className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100 font-bold"
+            >
+              💰 Caixa
+            </button>
+          )}
+          
           <button
             onClick={() => navigate('/vendas')}
             className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"

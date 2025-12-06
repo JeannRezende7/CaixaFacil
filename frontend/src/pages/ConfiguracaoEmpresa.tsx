@@ -19,6 +19,7 @@ interface Configuracao {
   mensagemCupom: string;
   logoPath?: string;
   clientePadraoId?: number;
+  controlarCaixa?: boolean;  // ADICIONADO
 }
 
 interface Cliente {
@@ -294,45 +295,85 @@ export default function ConfiguracaoEmpresa() {
               <div>
                 <h2 className="text-xl font-bold mb-4">Configurações de Vendas</h2>
 
-                <div className="max-w-2xl">
-                  <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
-                    <p className="text-sm text-blue-800">
-                      <strong>Cliente Padrão:</strong> Este cliente será automaticamente selecionado 
-                      ao abrir o PDV ou ao limpar uma venda. Útil para vendas sem identificação do cliente.
-                    </p>
-                  </div>
-
+                <div className="max-w-2xl space-y-6">
+                  
+                  {/* CLIENTE PADRÃO */}
                   <div>
-                    <label className="block text-sm font-bold mb-2">Cliente Padrão para Vendas</label>
-                    <select
-                      value={config.clientePadraoId || ''}
-                      onChange={(e) => setConfig({ 
-                        ...config, 
-                        clientePadraoId: e.target.value ? Number(e.target.value) : undefined 
-                      })}
-                      className="w-full px-3 py-2 border rounded"
-                    >
-                      <option value="">Nenhum (deixar em branco)</option>
-                      {clientes.map(cliente => (
-                        <option key={cliente.id} value={cliente.id}>
-                          {cliente.codigo ? `${cliente.codigo} - ` : ''}{cliente.nome}
-                        </option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Se nenhum cliente for selecionado, o campo ficará vazio no PDV
-                    </p>
-                  </div>
-
-                  {config.clientePadraoId && (
-                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
-                      <p className="text-sm text-green-800">
-                        ✓ Cliente padrão selecionado: <strong>
-                          {clientes.find(c => c.id === config.clientePadraoId)?.nome}
-                        </strong>
+                    <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
+                      <p className="text-sm text-blue-800">
+                        <strong>Cliente Padrão:</strong> Este cliente será automaticamente selecionado 
+                        ao abrir o PDV ou ao limpar uma venda. Útil para vendas sem identificação do cliente.
                       </p>
                     </div>
-                  )}
+
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Cliente Padrão para Vendas</label>
+                      <select
+                        value={config.clientePadraoId || ''}
+                        onChange={(e) => setConfig({ 
+                          ...config, 
+                          clientePadraoId: e.target.value ? Number(e.target.value) : undefined 
+                        })}
+                        className="w-full px-3 py-2 border rounded"
+                      >
+                        <option value="">Nenhum (deixar em branco)</option>
+                        {clientes.map(cliente => (
+                          <option key={cliente.id} value={cliente.id}>
+                            {cliente.codigo ? `${cliente.codigo} - ` : ''}{cliente.nome}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Se nenhum cliente for selecionado, o campo ficará vazio no PDV
+                      </p>
+                    </div>
+
+                    {config.clientePadraoId && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-sm text-green-800">
+                          ✓ Cliente padrão selecionado: <strong>
+                            {clientes.find(c => c.id === config.clientePadraoId)?.nome}
+                          </strong>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* CONTROLE DE CAIXA */}
+                  <div className="border-t pt-6">
+                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                      <p className="text-sm text-yellow-800">
+                        <strong>Controle de Caixa:</strong> Ao habilitar, será necessário abrir o caixa 
+                        antes de realizar vendas. O sistema controlará abertura, fechamento, suprimentos e sangrias.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={config.controlarCaixa || false}
+                          onChange={(e) => setConfig({ ...config, controlarCaixa: e.target.checked })}
+                          className="mr-3 w-5 h-5"
+                        />
+                        <div>
+                          <span className="text-sm font-bold">Habilitar Controle de Caixa</span>
+                          <p className="text-xs text-gray-600">
+                            Ativa o gerenciamento completo de caixa com abertura, fechamento e movimentações
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {config.controlarCaixa && (
+                      <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-sm text-green-800">
+                          ✓ Controle de caixa habilitado! Acesse a tela de Caixa para gerenciar.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
               </div>
             )}
