@@ -26,21 +26,21 @@ export default function PDV() {
   const [itemSelecionado, setItemSelecionado] = useState<number>(-1);
   const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
   const [mostrarModalPagamento, setMostrarModalPagamento] = useState(false);
-  
+
   const [empresa, setEmpresa] = useState<any>(null);
   const [mostrarCupom, setMostrarCupom] = useState(false);
   const [vendaFinalizada, setVendaFinalizada] = useState<any>(null);
-  
+
   // CONTROLE DE CAIXA
   const [caixaAberto, setCaixaAberto] = useState(false);
   const [controlarCaixa, setControlarCaixa] = useState(false);
-  
+
   const [descontoGlobalPerc, setDescontoGlobalPerc] = useState('0');
   const [descontoGlobalValor, setDescontoGlobalValor] = useState('0');
   const [acrescimoGlobalPerc, setAcrescimoGlobalPerc] = useState('0');
   const [acrescimoGlobalValor, setAcrescimoGlobalValor] = useState('0');
   const [frete, setFrete] = useState('0');
-  
+
   const inputProdutoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function PDV() {
       return;
     }
     setUsuario(JSON.parse(usuarioStr));
-    
+
     cadastrosService.listarFormasPagamento().then(res => {
       setFormasPagamento(res.data);
     });
@@ -61,7 +61,7 @@ export default function PDV() {
       .then(res => {
         setEmpresa(res.data);
         setControlarCaixa(res.data.controlarCaixa || false);
-        
+
         // Carregar cliente padrão se configurado
         if (res.data.clientePadrao) {
           setCliente(res.data.clientePadrao);
@@ -100,12 +100,17 @@ export default function PDV() {
 
   const buscarProduto = async (codigo: string) => {
     if (!codigo.trim()) return;
-    
+
     try {
       // Busca inteligente com padding automático
       const res = await axios.get(`http://localhost:8080/api/produtos/buscar-parcial/${codigo}`);
-      setProdutoAtual(res.data);
-      adicionarItem(res.data);
+      if (Array.isArray(res.data) && res.data.length > 0) {
+        const produto = res.data[0]; // pega o primeiro
+        setProdutoAtual(produto);
+        adicionarItem(produto);
+      } else {
+        showError('Produto não encontrado');
+      }
       setCodigoProduto('');
       inputProdutoRef.current?.focus();
     } catch (error) {
@@ -120,7 +125,7 @@ export default function PDV() {
       setCliente(null);
       return;
     }
-    
+
     try {
       // Busca inteligente com padding automático
       const res = await axios.get(`http://localhost:8080/api/clientes/buscar-parcial/${codigo}`);
@@ -163,23 +168,23 @@ export default function PDV() {
 
   const calcularTotalItem = (item: VendaItem): number => {
     let total = item.precoUnitario * item.quantidade;
-    
+
     if (item.descontoPercentual && item.descontoPercentual > 0) {
       total -= (total * item.descontoPercentual / 100);
     }
-    
+
     if (item.descontoValor && item.descontoValor > 0) {
       total -= item.descontoValor;
     }
-    
+
     if (item.acrescimoPercentual && item.acrescimoPercentual > 0) {
       total += (total * item.acrescimoPercentual / 100);
     }
-    
+
     if (item.acrescimoValor && item.acrescimoValor > 0) {
       total += item.acrescimoValor;
     }
-    
+
     return Math.max(0, total);
   };
 
@@ -195,7 +200,7 @@ export default function PDV() {
     const val = Math.max(0, parseFloat(valor) || 0);
     const novosItens = [...itens];
     const item = novosItens[index];
-    
+
     if (tipo === 'perc') {
       item.descontoPercentual = val;
       const subtotal = item.precoUnitario * item.quantidade;
@@ -205,7 +210,7 @@ export default function PDV() {
       const subtotal = item.precoUnitario * item.quantidade;
       item.descontoPercentual = subtotal > 0 ? (val / subtotal * 100) : 0;
     }
-    
+
     item.total = calcularTotalItem(item);
     setItens(novosItens);
   };
@@ -214,7 +219,7 @@ export default function PDV() {
     const val = Math.max(0, parseFloat(valor) || 0);
     const novosItens = [...itens];
     const item = novosItens[index];
-    
+
     if (tipo === 'perc') {
       item.acrescimoPercentual = val;
       const subtotal = item.precoUnitario * item.quantidade;
@@ -224,7 +229,7 @@ export default function PDV() {
       const subtotal = item.precoUnitario * item.quantidade;
       item.acrescimoPercentual = subtotal > 0 ? (val / subtotal * 100) : 0;
     }
-    
+
     item.total = calcularTotalItem(item);
     setItens(novosItens);
   };
@@ -235,26 +240,26 @@ export default function PDV() {
 
   const calcularTotal = () => {
     let total = calcularSubtotal();
-    
+
     const descPerc = Math.max(0, parseFloat(descontoGlobalPerc) || 0);
     if (descPerc > 0) {
       total -= (total * descPerc / 100);
     }
-    
+
     const descValor = Math.max(0, parseFloat(descontoGlobalValor) || 0);
     total -= descValor;
-    
+
     const acrPerc = Math.max(0, parseFloat(acrescimoGlobalPerc) || 0);
     if (acrPerc > 0) {
       total += (total * acrPerc / 100);
     }
-    
+
     const acrValor = Math.max(0, parseFloat(acrescimoGlobalValor) || 0);
     total += acrValor;
-    
+
     const freteVal = Math.max(0, parseFloat(frete) || 0);
     total += freteVal;
-    
+
     return Math.max(0, total);
   };
 
@@ -263,13 +268,13 @@ export default function PDV() {
       showWarning('Adicione itens à venda');
       return;
     }
-    
+
     // VALIDAR CAIXA ABERTO
     if (controlarCaixa && !caixaAberto) {
       showError('Não é possível finalizar venda sem caixa aberto!');
       return;
     }
-    
+
     setMostrarModalPagamento(true);
   };
 
@@ -307,13 +312,13 @@ export default function PDV() {
     try {
       const res = await vendaService.criar(vendaDTO);
       setMostrarModalPagamento(false);
-      
+
       if (troco > 0) {
         showSuccess(`Venda ${res.data.numeroDocumento} finalizada! Troco: R$ ${troco.toFixed(2)}`);
       } else {
         showSuccess(`Venda ${res.data.numeroDocumento} finalizada com sucesso!`);
       }
-      
+
       // Preparar dados completos para o cupom
       const vendaCompleta = {
         ...res.data,
@@ -325,11 +330,11 @@ export default function PDV() {
           valor: p.valorPago,
         })),
       };
-      
+
       setVendaFinalizada(vendaCompleta);
       setMostrarCupom(true);
       limparVenda();
-      
+
       // Atualizar status do caixa após venda
       if (controlarCaixa) {
         verificarStatusCaixa();
@@ -354,7 +359,7 @@ export default function PDV() {
 
   const limparVenda = () => {
     setItens([]);
-    
+
     // Se tem cliente padrão configurado, recarregar ele
     if (empresa?.clientePadrao) {
       setCliente(empresa.clientePadrao);
@@ -363,7 +368,7 @@ export default function PDV() {
       setCliente(null);
       setCodigoCliente('');
     }
-    
+
     setCodigoProduto('');
     setDescontoGlobalPerc('0');
     setDescontoGlobalValor('0');
@@ -379,29 +384,28 @@ export default function PDV() {
       <div className="bg-primary text-white p-4 flex justify-between items-center">
         <div className="flex items-center gap-4">
           {empresa?.logoPath && (
-            <img 
-              src={`http://localhost:8080/uploads/logos/${empresa.logoPath}`} 
-              alt="Logo" 
+            <img
+              src={`http://localhost:8080/uploads/logos/${empresa.logoPath}`}
+              alt="Logo"
               className="h-12 w-auto"
             />
           )}
           <h1 className="text-2xl font-bold">
             {empresa?.nomeFantasia || 'VendeJá PDV'}
           </h1>
-          
+
           {/* INDICADOR DE CAIXA */}
           {controlarCaixa && (
-            <div className={`px-3 py-1 rounded font-bold text-sm ${
-              caixaAberto ? 'bg-green-500' : 'bg-red-500'
-            }`}>
+            <div className={`px-3 py-1 rounded font-bold text-sm ${caixaAberto ? 'bg-green-500' : 'bg-red-500'
+              }`}>
               {caixaAberto ? '✓ CAIXA ABERTO' : '✗ CAIXA FECHADO'}
             </div>
           )}
         </div>
-        
+
         <div className="flex gap-2 items-center">
           <span className="mr-4">Operador: {usuario?.nome}</span>
-          
+
           {/* BOTÃO CAIXA */}
           {controlarCaixa && (
             <button
@@ -411,7 +415,7 @@ export default function PDV() {
               💰 Caixa
             </button>
           )}
-          
+
           <button
             onClick={() => navigate('/vendas')}
             className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
@@ -469,19 +473,19 @@ export default function PDV() {
                       🔍
                     </button>
                   </div>
-                  
+
                   {produtoAtual?.fotoPath && (
                     <div className="w-20 h-20 border-2 border-gray-300 rounded overflow-hidden flex items-center justify-center bg-gray-50">
-                      <img 
+                      <img
                         src={`http://localhost:8080/uploads/produtos/${produtoAtual.fotoPath}`}
-                        alt="Foto do Produto" 
+                        alt="Foto do Produto"
                         className="max-w-full max-h-full object-contain"
                       />
                     </div>
                   )}
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold mb-1">Código do Cliente</label>
                 <div className="flex gap-2">
@@ -523,14 +527,13 @@ export default function PDV() {
               <div className="col-span-1">Acr R$</div>
               <div className="col-span-2">Total</div>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto">
               {itens.map((item, index) => (
                 <div
                   key={index}
-                  className={`grid grid-cols-12 gap-2 p-2 border-b cursor-pointer hover:bg-gray-50 ${
-                    itemSelecionado === index ? 'bg-blue-100' : ''
-                  }`}
+                  className={`grid grid-cols-12 gap-2 p-2 border-b cursor-pointer hover:bg-gray-50 ${itemSelecionado === index ? 'bg-blue-100' : ''
+                    }`}
                   onClick={() => setItemSelecionado(index)}
                 >
                   <div className="col-span-1">{index + 1}</div>
@@ -600,7 +603,7 @@ export default function PDV() {
               <span>Subtotal:</span>
               <span className="font-bold">R$ {calcularSubtotal().toFixed(2)}</span>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-xs">Desc. Global %</label>
@@ -644,7 +647,7 @@ export default function PDV() {
                 />
               </div>
             </div>
-            
+
             <div>
               <label className="text-xs">Frete</label>
               <input
@@ -655,7 +658,7 @@ export default function PDV() {
                 min="0"
               />
             </div>
-            
+
             <div className="border-t pt-2 mt-2">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold">TOTAL:</span>

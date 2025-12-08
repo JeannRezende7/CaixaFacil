@@ -17,9 +17,13 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/produtos")
 public class ProdutoController {
-    
+
     @Autowired
     private ProdutoRepository produtoRepository;
+
+    // ============================================================
+    // LISTAR / BUSCAR
+    // ============================================================
 
     @GetMapping
     public List<Produto> listar() {
@@ -32,6 +36,30 @@ public class ProdutoController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    // Buscar por código EXATO — DEPENDÊNCIA DO FRONT
+    @GetMapping("/codigo/{codigo}")
+    public ResponseEntity<Produto> buscarPorCodigo(@PathVariable String codigo) {
+        Produto produto = produtoRepository.findByCodigo(codigo);
+        if (produto == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(produto);
+    }
+
+    // Buscar parcial — DEPENDÊNCIA PRINCIPAL DO PDV
+    @GetMapping("/buscar-parcial/{texto}")
+    public List<Produto> buscarParcial(@PathVariable String texto) {
+        return produtoRepository.buscarParcial(texto);
+    }
+
+    // Buscar por query param — usado em telas de pesquisa
+    @GetMapping("/buscar")
+    public List<Produto> buscar(@RequestParam String q) {
+        return produtoRepository.buscarParcial(q);
+    }
+
+    // ============================================================
+    // CRUD
+    // ============================================================
 
     @PostMapping
     public Produto criar(@RequestBody Produto produto) {
@@ -53,7 +81,6 @@ public class ProdutoController {
                     p.setControlarEstoque(produto.getControlarEstoque());
                     p.setAtivo(produto.getAtivo());
                     p.setObservacoes(produto.getObservacoes());
-                    // Mantém fotoPath se não for enviada nova foto
                     return ResponseEntity.ok(produtoRepository.save(p));
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -70,54 +97,49 @@ public class ProdutoController {
     }
 
     // ============================================================
-    // UPLOAD DE FOTO DO PRODUTO
+    // UPLOAD DE FOTO
     // ============================================================
+
     @PostMapping("/{id}/foto")
     public ResponseEntity<Map<String, String>> uploadFoto(
             @PathVariable Long id,
             @RequestParam("file") MultipartFile file
     ) {
         try {
-            // Buscar produto
             Optional<Produto> produtoOpt = produtoRepository.findById(id);
-            if (produtoOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
+            if (produtoOpt.isEmpty()) return ResponseEntity.notFound().build();
+
             Produto produto = produtoOpt.get();
 
-            // Criar diretório se não existir
             String uploadDir = "uploads/produtos/";
             Path uploadPath = Paths.get(uploadDir);
+
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
 
-            // Gerar nome único para o arquivo
             String originalFilename = file.getOriginalFilename();
-            String extension = originalFilename != null && originalFilename.contains(".") 
-                    ? originalFilename.substring(originalFilename.lastIndexOf(".")) 
+            String extension = originalFilename != null && originalFilename.contains(".")
+                    ? originalFilename.substring(originalFilename.lastIndexOf("."))
                     : "";
+
             String filename = "produto_" + id + "_" + System.currentTimeMillis() + extension;
 
-            // Deletar foto antiga se existir
+            // Remove foto antiga
             if (produto.getFotoPath() != null && !produto.getFotoPath().isEmpty()) {
                 try {
                     Path oldFile = uploadPath.resolve(produto.getFotoPath());
                     Files.deleteIfExists(oldFile);
-                } catch (IOException e) {
-                    // Ignorar erro ao deletar arquivo antigo
-                }
+                } catch (Exception ignored) {}
             }
 
-            // Salvar arquivo
+            // Salva nova foto
             Path filePath = uploadPath.resolve(filename);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            // Atualizar produto
             produto.setFotoPath(filename);
             produtoRepository.save(produto);
 
-            // Retornar caminho
             Map<String, String> response = new HashMap<>();
             response.put("fotoPath", filename);
             response.put("message", "Foto enviada com sucesso");
@@ -131,23 +153,19 @@ public class ProdutoController {
         }
     }
 
-    // Deletar foto do produto
     @DeleteMapping("/{id}/foto")
     public ResponseEntity<?> deletarFoto(@PathVariable Long id) {
         try {
             Optional<Produto> produtoOpt = produtoRepository.findById(id);
-            if (produtoOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
+            if (produtoOpt.isEmpty()) return ResponseEntity.notFound().build();
+
             Produto produto = produtoOpt.get();
 
             if (produto.getFotoPath() != null && !produto.getFotoPath().isEmpty()) {
-                // Deletar arquivo físico
                 String uploadDir = "uploads/produtos/";
                 Path filePath = Paths.get(uploadDir).resolve(produto.getFotoPath());
                 Files.deleteIfExists(filePath);
 
-                // Limpar campo no banco
                 produto.setFotoPath(null);
                 produtoRepository.save(produto);
             }
