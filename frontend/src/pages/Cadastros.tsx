@@ -13,7 +13,7 @@ export default function Cadastros() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
-  
+
   const [produtoForm, setProdutoForm] = useState<Partial<Produto>>({
     codigo: '',
     descricao: '',
@@ -32,12 +32,12 @@ export default function Cadastros() {
 
   const [novoCodigo, setNovoCodigo] = useState('');
   const [novoCodigoDesc, setNovoCodigoDesc] = useState('');
-  
+
   const [clienteForm, setClienteForm] = useState<Partial<Cliente>>({
     nome: '',
     ativo: true,
   });
-  
+
   const [usuarioForm, setUsuarioForm] = useState<Partial<Usuario>>({
     login: '',
     senha: '',
@@ -45,12 +45,12 @@ export default function Cadastros() {
     admin: false,
     ativo: true,
   });
-  
+
   const [categoriaForm, setCategoriaForm] = useState<Partial<Categoria>>({
     descricao: '',
     ativo: true,
   });
-  
+
   const [formaPagamentoForm, setFormaPagamentoForm] = useState<Partial<FormaPagamento>>({
     descricao: '',
     categoria: 'DINHEIRO',
@@ -153,7 +153,7 @@ export default function Cadastros() {
       showWarning('Preencha código e descrição');
       return;
     }
-    
+
     try {
       // Preparar dados para envio
       const produtoDTO = {
@@ -201,7 +201,7 @@ export default function Cadastros() {
       ...produto,
       codigosAlternativos: produto.codigosAlternativos || [],
     });
-    
+
     // Carregar preview da foto se existir
     if (produto.fotoPath) {
       setFotoPreview(`http://localhost:8080/uploads/produtos/${produto.fotoPath}`);
@@ -215,7 +215,7 @@ export default function Cadastros() {
       showWarning('Preencha o nome');
       return;
     }
-    
+
     try {
       if (clienteForm.id) {
         await clienteService.atualizar(clienteForm.id, clienteForm as Cliente);
@@ -229,13 +229,13 @@ export default function Cadastros() {
       showError('Erro ao salvar cliente');
     }
   };
-  
+
   const salvarUsuario = async () => {
     if (!usuarioForm.login || !usuarioForm.senha || !usuarioForm.nome) {
       showWarning('Preencha login, senha e nome');
       return;
     }
-    
+
     try {
       if (usuarioForm.id) {
         await cadastrosService.atualizarUsuario(usuarioForm.id, usuarioForm as Usuario);
@@ -249,13 +249,13 @@ export default function Cadastros() {
       showError('Erro ao salvar usuário');
     }
   };
-  
+
   const salvarCategoria = async () => {
     if (!categoriaForm.descricao) {
       showWarning('Preencha a descrição');
       return;
     }
-    
+
     try {
       await cadastrosService.criarCategoria(categoriaForm as Categoria);
       showSuccess('Categoria salva com sucesso!');
@@ -265,13 +265,13 @@ export default function Cadastros() {
       showError('Erro ao salvar categoria');
     }
   };
-  
+
   const salvarFormaPagamento = async () => {
     if (!formaPagamentoForm.descricao) {
       showWarning('Preencha a descrição');
       return;
     }
-    
+
     try {
       await cadastrosService.criarFormaPagamento(formaPagamentoForm as FormaPagamento);
       showSuccess('Forma de pagamento salva com sucesso!');
@@ -329,41 +329,36 @@ export default function Cadastros() {
           <div className="flex border-b overflow-x-auto">
             <button
               onClick={() => setAba('produtos')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${
-                aba === 'produtos' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-              }`}
+              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'produtos' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+                }`}
             >
               Produtos
             </button>
             <button
               onClick={() => setAba('clientes')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${
-                aba === 'clientes' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-              }`}
+              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'clientes' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+                }`}
             >
               Clientes
             </button>
             <button
               onClick={() => setAba('usuarios')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${
-                aba === 'usuarios' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-              }`}
+              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'usuarios' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+                }`}
             >
               Usuários
             </button>
             <button
               onClick={() => setAba('categorias')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${
-                aba === 'categorias' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-              }`}
+              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'categorias' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+                }`}
             >
               Categorias
             </button>
             <button
               onClick={() => setAba('formasPagamento')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${
-                aba === 'formasPagamento' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-              }`}
+              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'formasPagamento' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+                }`}
             >
               Formas Pagamento
             </button>
@@ -379,7 +374,13 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={produtoForm.codigo}
-                      onChange={(e) => setProdutoForm({...produtoForm, codigo: e.target.value})}
+                      onChange={(e) =>
+                        setProdutoForm({
+                          ...produtoForm,
+                          codigo: e.target.value.padStart(6, "0"), // <<< ZERO-FILL AUTOMÁTICO
+                        })
+                      }
+                      maxLength={6}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -388,11 +389,11 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={produtoForm.descricao}
-                      onChange={(e) => setProdutoForm({...produtoForm, descricao: e.target.value})}
+                      onChange={(e) => setProdutoForm({ ...produtoForm, descricao: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-bold mb-1">Categoria</label>
                     <select
@@ -400,7 +401,7 @@ export default function Cadastros() {
                       onChange={(e) => {
                         const catId = Number(e.target.value);
                         const cat = categorias.find(c => c.id === catId);
-                        setProdutoForm({...produtoForm, categoria: cat});
+                        setProdutoForm({ ...produtoForm, categoria: cat });
                       }}
                       className="w-full px-3 py-2 border rounded"
                     >
@@ -418,7 +419,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={produtoForm.unidade}
-                      onChange={(e) => setProdutoForm({...produtoForm, unidade: e.target.value})}
+                      onChange={(e) => setProdutoForm({ ...produtoForm, unidade: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -429,10 +430,10 @@ export default function Cadastros() {
                     <div className="flex gap-2 items-center">
                       {fotoPreview && (
                         <div className="relative">
-                          <img 
-                            src={fotoPreview} 
-                            alt="Preview" 
-                            className="h-20 w-20 object-cover border rounded" 
+                          <img
+                            src={fotoPreview}
+                            alt="Preview"
+                            className="h-20 w-20 object-cover border rounded"
                           />
                           <button
                             type="button"
@@ -457,13 +458,13 @@ export default function Cadastros() {
                       </p>
                     )}
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-bold mb-1">Preço Venda</label>
                     <input
                       type="number"
                       value={produtoForm.precoVenda ?? ''}
-                      onChange={(e) => setProdutoForm({...produtoForm, precoVenda: e.target.value ? Number(e.target.value) : undefined})}
+                      onChange={(e) => setProdutoForm({ ...produtoForm, precoVenda: e.target.value ? Number(e.target.value) : undefined })}
                       className="w-full px-3 py-2 border rounded"
                       step="0.01"
                       placeholder="0,00"
@@ -474,7 +475,7 @@ export default function Cadastros() {
                     <input
                       type="number"
                       value={produtoForm.precoCusto ?? ''}
-                      onChange={(e) => setProdutoForm({...produtoForm, precoCusto: e.target.value ? Number(e.target.value) : undefined})}
+                      onChange={(e) => setProdutoForm({ ...produtoForm, precoCusto: e.target.value ? Number(e.target.value) : undefined })}
                       className="w-full px-3 py-2 border rounded"
                       step="0.01"
                       placeholder="0,00"
@@ -485,7 +486,7 @@ export default function Cadastros() {
                     <input
                       type="number"
                       value={produtoForm.estoque ?? ''}
-                      onChange={(e) => setProdutoForm({...produtoForm, estoque: e.target.value ? Number(e.target.value) : undefined})}
+                      onChange={(e) => setProdutoForm({ ...produtoForm, estoque: e.target.value ? Number(e.target.value) : undefined })}
                       className="w-full px-3 py-2 border rounded"
                       step="0.001"
                       placeholder="0,000"
@@ -496,7 +497,7 @@ export default function Cadastros() {
                     <input
                       type="number"
                       value={produtoForm.estoqueMinimo ?? ''}
-                      onChange={(e) => setProdutoForm({...produtoForm, estoqueMinimo: e.target.value ? Number(e.target.value) : undefined})}
+                      onChange={(e) => setProdutoForm({ ...produtoForm, estoqueMinimo: e.target.value ? Number(e.target.value) : undefined })}
                       className="w-full px-3 py-2 border rounded"
                       step="0.001"
                       placeholder="0,000"
@@ -507,7 +508,7 @@ export default function Cadastros() {
                       <input
                         type="checkbox"
                         checked={produtoForm.controlarEstoque}
-                        onChange={(e) => setProdutoForm({...produtoForm, controlarEstoque: e.target.checked})}
+                        onChange={(e) => setProdutoForm({ ...produtoForm, controlarEstoque: e.target.checked })}
                         className="mr-2"
                       />
                       <span className="text-sm font-bold">Controlar Estoque</span>
@@ -577,7 +578,7 @@ export default function Cadastros() {
                     </table>
                   )}
                 </div>
-                
+
                 <div className="flex gap-2">
                   <button
                     onClick={salvarProduto}
@@ -642,7 +643,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={clienteForm.codigo || ''}
-                      onChange={(e) => setClienteForm({...clienteForm, codigo: e.target.value})}
+                      onChange={(e) => setClienteForm({ ...clienteForm, codigo: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -651,7 +652,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={clienteForm.nome}
-                      onChange={(e) => setClienteForm({...clienteForm, nome: e.target.value})}
+                      onChange={(e) => setClienteForm({ ...clienteForm, nome: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -660,7 +661,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={clienteForm.cpfCnpj || ''}
-                      onChange={(e) => setClienteForm({...clienteForm, cpfCnpj: e.target.value})}
+                      onChange={(e) => setClienteForm({ ...clienteForm, cpfCnpj: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -669,7 +670,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={clienteForm.telefone || ''}
-                      onChange={(e) => setClienteForm({...clienteForm, telefone: e.target.value})}
+                      onChange={(e) => setClienteForm({ ...clienteForm, telefone: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -678,7 +679,7 @@ export default function Cadastros() {
                     <input
                       type="email"
                       value={clienteForm.email || ''}
-                      onChange={(e) => setClienteForm({...clienteForm, email: e.target.value})}
+                      onChange={(e) => setClienteForm({ ...clienteForm, email: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -736,7 +737,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={usuarioForm.login}
-                      onChange={(e) => setUsuarioForm({...usuarioForm, login: e.target.value})}
+                      onChange={(e) => setUsuarioForm({ ...usuarioForm, login: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -745,7 +746,7 @@ export default function Cadastros() {
                     <input
                       type="password"
                       value={usuarioForm.senha}
-                      onChange={(e) => setUsuarioForm({...usuarioForm, senha: e.target.value})}
+                      onChange={(e) => setUsuarioForm({ ...usuarioForm, senha: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -754,7 +755,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={usuarioForm.nome}
-                      onChange={(e) => setUsuarioForm({...usuarioForm, nome: e.target.value})}
+                      onChange={(e) => setUsuarioForm({ ...usuarioForm, nome: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -763,7 +764,7 @@ export default function Cadastros() {
                       <input
                         type="checkbox"
                         checked={usuarioForm.admin}
-                        onChange={(e) => setUsuarioForm({...usuarioForm, admin: e.target.checked})}
+                        onChange={(e) => setUsuarioForm({ ...usuarioForm, admin: e.target.checked })}
                         className="mr-2"
                       />
                       <span className="text-sm font-bold">Administrador</span>
@@ -823,7 +824,7 @@ export default function Cadastros() {
                     <input
                       type="text"
                       value={categoriaForm.descricao}
-                      onChange={(e) => setCategoriaForm({...categoriaForm, descricao: e.target.value})}
+                      onChange={(e) => setCategoriaForm({ ...categoriaForm, descricao: e.target.value })}
                       className="w-full px-3 py-2 border rounded"
                     />
                   </div>
@@ -871,14 +872,14 @@ export default function Cadastros() {
             {aba === 'formasPagamento' && (
               <div>
                 <h3 className="text-lg font-bold mb-4">Cadastro de Forma de Pagamento</h3>
-                
+
                 {/* Descrição */}
                 <div className="mb-4">
                   <label className="block text-sm font-bold mb-1">Descrição*</label>
                   <input
                     type="text"
                     value={formaPagamentoForm.descricao}
-                    onChange={(e) => setFormaPagamentoForm({...formaPagamentoForm, descricao: e.target.value})}
+                    onChange={(e) => setFormaPagamentoForm({ ...formaPagamentoForm, descricao: e.target.value })}
                     className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                     required
                   />
@@ -890,7 +891,7 @@ export default function Cadastros() {
                     <label className="block text-sm font-bold mb-1">Tipo de Pagamento (PDV)*</label>
                     <select
                       value={formaPagamentoForm.categoria || 'DINHEIRO'}
-                      onChange={(e) => setFormaPagamentoForm({...formaPagamentoForm, categoria: e.target.value})}
+                      onChange={(e) => setFormaPagamentoForm({ ...formaPagamentoForm, categoria: e.target.value })}
                       className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     >
@@ -905,7 +906,7 @@ export default function Cadastros() {
                     <label className="block text-sm font-bold mb-1">Meio de Pagamento (NFC-e)*</label>
                     <select
                       value={formaPagamentoForm.tipoPagamento}
-                      onChange={(e) => setFormaPagamentoForm({...formaPagamentoForm, tipoPagamento: e.target.value})}
+                      onChange={(e) => setFormaPagamentoForm({ ...formaPagamentoForm, tipoPagamento: e.target.value })}
                       className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
                       required
                     >
@@ -924,7 +925,7 @@ export default function Cadastros() {
                     <input
                       type="checkbox"
                       checked={formaPagamentoForm.permiteParcelamento}
-                      onChange={(e) => setFormaPagamentoForm({...formaPagamentoForm, permiteParcelamento: e.target.checked})}
+                      onChange={(e) => setFormaPagamentoForm({ ...formaPagamentoForm, permiteParcelamento: e.target.checked })}
                       className="mr-2 w-4 h-4"
                     />
                     <span className="text-sm font-bold">Permite Parcelamento</span>

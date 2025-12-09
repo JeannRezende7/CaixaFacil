@@ -428,6 +428,15 @@ export default function PDV() {
           >
             Cadastros
           </button>
+
+          <button
+            onClick={() => navigate('/estoque/consulta')}
+            className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
+          >
+            📦 Estoque
+          </button>
+
+
           <button
             onClick={() => navigate('/configuracao')}
             className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"

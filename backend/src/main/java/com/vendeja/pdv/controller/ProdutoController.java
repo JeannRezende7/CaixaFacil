@@ -2,6 +2,8 @@ package com.vendeja.pdv.controller;
 
 import com.vendeja.pdv.model.Produto;
 import com.vendeja.pdv.repository.ProdutoRepository;
+import com.vendeja.pdv.service.ProdutoService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,8 @@ public class ProdutoController {
 
     @Autowired
     private ProdutoRepository produtoRepository;
+    @Autowired
+    private ProdutoService produtoService;
 
     // ============================================================
     // LISTAR / BUSCAR
@@ -41,7 +45,8 @@ public class ProdutoController {
     @GetMapping("/codigo/{codigo}")
     public ResponseEntity<Produto> buscarPorCodigo(@PathVariable String codigo) {
         Produto produto = produtoRepository.findByCodigo(codigo);
-        if (produto == null) return ResponseEntity.notFound().build();
+        if (produto == null)
+            return ResponseEntity.notFound().build();
         return ResponseEntity.ok(produto);
     }
 
@@ -103,11 +108,11 @@ public class ProdutoController {
     @PostMapping("/{id}/foto")
     public ResponseEntity<Map<String, String>> uploadFoto(
             @PathVariable Long id,
-            @RequestParam("file") MultipartFile file
-    ) {
+            @RequestParam("file") MultipartFile file) {
         try {
             Optional<Produto> produtoOpt = produtoRepository.findById(id);
-            if (produtoOpt.isEmpty()) return ResponseEntity.notFound().build();
+            if (produtoOpt.isEmpty())
+                return ResponseEntity.notFound().build();
 
             Produto produto = produtoOpt.get();
 
@@ -130,7 +135,8 @@ public class ProdutoController {
                 try {
                     Path oldFile = uploadPath.resolve(produto.getFotoPath());
                     Files.deleteIfExists(oldFile);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
 
             // Salva nova foto
@@ -157,7 +163,8 @@ public class ProdutoController {
     public ResponseEntity<?> deletarFoto(@PathVariable Long id) {
         try {
             Optional<Produto> produtoOpt = produtoRepository.findById(id);
-            if (produtoOpt.isEmpty()) return ResponseEntity.notFound().build();
+            if (produtoOpt.isEmpty())
+                return ResponseEntity.notFound().build();
 
             Produto produto = produtoOpt.get();
 
@@ -176,4 +183,19 @@ public class ProdutoController {
             return ResponseEntity.internalServerError().body("Erro ao deletar foto");
         }
     }
+
+    // ============= ESTOQUE BAIXO =============
+    @GetMapping("/estoque-baixo")
+    public ResponseEntity<List<Produto>> getEstoqueBaixo() {
+        List<Produto> produtos = produtoService.buscarEstoqueBaixo();
+        return ResponseEntity.ok(produtos);
+    }
+
+    // ============= ESTOQUE ALERTA (20%) =============
+    @GetMapping("/estoque-alerta")
+    public ResponseEntity<List<Produto>> getEstoqueAlerta() {
+        List<Produto> produtos = produtoService.buscarEstoqueAlerta();
+        return ResponseEntity.ok(produtos);
+    }
+
 }

@@ -7,6 +7,7 @@ import ConfiguracaoEmpresa from './pages/ConfiguracaoEmpresa';
 import { NotificationProvider } from './contexts/NotificationContext';
 import Caixa from './pages/Caixa';
 import './styles/print-styles.css';
+import EstoqueConsulta from './pages/EstoqueConsulta';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/vendas" element={<Vendas />} />
           <Route path="/configuracao" element={<ConfiguracaoEmpresa />} />
           <Route path="/caixa" element={<Caixa />} />
+          <Route path="/estoque/consulta" element={<EstoqueConsulta />} />
         </Routes>
       </BrowserRouter>
     </NotificationProvider>
