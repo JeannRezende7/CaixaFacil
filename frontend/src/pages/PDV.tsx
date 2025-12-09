@@ -17,11 +17,12 @@ interface PagamentoItem {
 export default function PDV() {
   const navigate = useNavigate();
   const { showSuccess, showError, showWarning } = useNotification();
+
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [codigoProduto, setCodigoProduto] = useState('');
-  const [codigoCliente, setCodigoCliente] = useState('');
-  const [cliente, setCliente] = useState<Cliente | null>(null);
   const [produtoAtual, setProdutoAtual] = useState<Produto | null>(null);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
+
   const [itens, setItens] = useState<VendaItem[]>([]);
   const [itemSelecionado, setItemSelecionado] = useState<number>(-1);
   const [formasPagamento, setFormasPagamento] = useState<FormaPagamento[]>([]);
@@ -35,6 +36,7 @@ export default function PDV() {
   const [caixaAberto, setCaixaAberto] = useState(false);
   const [controlarCaixa, setControlarCaixa] = useState(false);
 
+  // DESCONTOS / FRETE
   const [descontoGlobalPerc, setDescontoGlobalPerc] = useState('0');
   const [descontoGlobalValor, setDescontoGlobalValor] = useState('0');
   const [acrescimoGlobalPerc, setAcrescimoGlobalPerc] = useState('0');
@@ -43,36 +45,37 @@ export default function PDV() {
 
   const inputProdutoRef = useRef<HTMLInputElement>(null);
 
+  // CARREGA USUÁRIO E FORMAS DE PAGAMENTO
   useEffect(() => {
     const usuarioStr = localStorage.getItem('usuario');
     if (!usuarioStr) {
       navigate('/');
       return;
     }
+
     setUsuario(JSON.parse(usuarioStr));
 
-    cadastrosService.listarFormasPagamento().then(res => {
+    cadastrosService.listarFormasPagamento().then((res) => {
       setFormasPagamento(res.data);
     });
   }, [navigate]);
 
+  // CARREGA CONFIGURAÇÃO / EMPRESA / CLIENTE PADRÃO
   useEffect(() => {
-    axios.get('http://localhost:8080/api/configuracao')
-      .then(res => {
+    axios
+      .get('http://localhost:8080/api/configuracao')
+      .then((res) => {
         setEmpresa(res.data);
         setControlarCaixa(res.data.controlarCaixa || false);
 
-        // Carregar cliente padrão se configurado
         if (res.data.clientePadrao) {
           setCliente(res.data.clientePadrao);
-          setCodigoCliente(res.data.clientePadrao.codigo || '');
-          console.log('Cliente padrão carregado:', res.data.clientePadrao.nome);
         }
       })
-      .catch(err => console.error('Erro ao carregar configuração:', err));
+      .catch((err) => console.error('Erro ao carregar configuração:', err));
   }, []);
 
-  // Verificar status do caixa
+  // VERIFICA STATUS DO CAIXA
   useEffect(() => {
     if (controlarCaixa) {
       verificarStatusCaixa();
@@ -88,29 +91,33 @@ export default function PDV() {
     }
   };
 
+  // DELETE REMOVE ITEM
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' && itemSelecionado >= 0) {
         removerItem(itemSelecionado);
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [itemSelecionado, itens]);
 
+  // BUSCA PRODUTO
   const buscarProduto = async (codigo: string) => {
     if (!codigo.trim()) return;
 
     try {
-      // Busca inteligente com padding automático
       const res = await axios.get(`http://localhost:8080/api/produtos/buscar-parcial/${codigo}`);
+
       if (Array.isArray(res.data) && res.data.length > 0) {
-        const produto = res.data[0]; // pega o primeiro
+        const produto = res.data[0];
         setProdutoAtual(produto);
         adicionarItem(produto);
       } else {
         showError('Produto não encontrado');
       }
+
       setCodigoProduto('');
       inputProdutoRef.current?.focus();
     } catch (error) {
@@ -120,33 +127,7 @@ export default function PDV() {
     }
   };
 
-  const buscarCliente = async (codigo: string) => {
-    if (!codigo.trim()) {
-      setCliente(null);
-      return;
-    }
-
-    try {
-      // Busca inteligente com padding automático
-      const res = await axios.get(`http://localhost:8080/api/clientes/buscar-parcial/${codigo}`);
-      setCliente(res.data);
-      setCodigoCliente(res.data.codigo);
-    } catch (error) {
-      showError('Cliente não encontrado');
-      setCodigoCliente('');
-    }
-  };
-
-  const carregarClientePadrao = async (clienteId: number) => {
-    try {
-      const res = await axios.get(`http://localhost:8080/api/clientes/${clienteId}`);
-      setCliente(res.data);
-      setCodigoCliente(res.data.codigo || '');
-    } catch (error) {
-      console.error('Erro ao carregar cliente padrão:', error);
-    }
-  };
-
+  // ADICIONA ITEM
   const adicionarItem = (produto: Produto) => {
     const novoItem: VendaItem = {
       produto,
@@ -158,29 +139,29 @@ export default function PDV() {
       acrescimoValor: 0,
       total: produto.precoVenda,
     };
-    setItens([...itens, novoItem]);
+
+    setItens((prev) => [...prev, novoItem]);
   };
 
+  // REMOVE ITEM
   const removerItem = (index: number) => {
     setItens(itens.filter((_, i) => i !== index));
     setItemSelecionado(-1);
   };
 
+  // CÁLCULO DO ITEM
   const calcularTotalItem = (item: VendaItem): number => {
     let total = item.precoUnitario * item.quantidade;
 
     if (item.descontoPercentual && item.descontoPercentual > 0) {
-      total -= (total * item.descontoPercentual / 100);
+      total -= (total * item.descontoPercentual) / 100;
     }
-
     if (item.descontoValor && item.descontoValor > 0) {
       total -= item.descontoValor;
     }
-
     if (item.acrescimoPercentual && item.acrescimoPercentual > 0) {
-      total += (total * item.acrescimoPercentual / 100);
+      total += (total * item.acrescimoPercentual) / 100;
     }
-
     if (item.acrescimoValor && item.acrescimoValor > 0) {
       total += item.acrescimoValor;
     }
@@ -204,11 +185,11 @@ export default function PDV() {
     if (tipo === 'perc') {
       item.descontoPercentual = val;
       const subtotal = item.precoUnitario * item.quantidade;
-      item.descontoValor = (subtotal * val / 100);
+      item.descontoValor = (subtotal * val) / 100;
     } else {
       item.descontoValor = val;
       const subtotal = item.precoUnitario * item.quantidade;
-      item.descontoPercentual = subtotal > 0 ? (val / subtotal * 100) : 0;
+      item.descontoPercentual = subtotal > 0 ? (val / subtotal) * 100 : 0;
     }
 
     item.total = calcularTotalItem(item);
@@ -223,36 +204,30 @@ export default function PDV() {
     if (tipo === 'perc') {
       item.acrescimoPercentual = val;
       const subtotal = item.precoUnitario * item.quantidade;
-      item.acrescimoValor = (subtotal * val / 100);
+      item.acrescimoValor = (subtotal * val) / 100;
     } else {
       item.acrescimoValor = val;
       const subtotal = item.precoUnitario * item.quantidade;
-      item.acrescimoPercentual = subtotal > 0 ? (val / subtotal * 100) : 0;
+      item.acrescimoPercentual = subtotal > 0 ? (val / subtotal) * 100 : 0;
     }
 
     item.total = calcularTotalItem(item);
     setItens(novosItens);
   };
 
-  const calcularSubtotal = () => {
-    return itens.reduce((acc, item) => acc + item.total, 0);
-  };
+  const calcularSubtotal = () => itens.reduce((acc, item) => acc + item.total, 0);
 
   const calcularTotal = () => {
     let total = calcularSubtotal();
 
     const descPerc = Math.max(0, parseFloat(descontoGlobalPerc) || 0);
-    if (descPerc > 0) {
-      total -= (total * descPerc / 100);
-    }
+    if (descPerc > 0) total -= (total * descPerc) / 100;
 
     const descValor = Math.max(0, parseFloat(descontoGlobalValor) || 0);
     total -= descValor;
 
     const acrPerc = Math.max(0, parseFloat(acrescimoGlobalPerc) || 0);
-    if (acrPerc > 0) {
-      total += (total * acrPerc / 100);
-    }
+    if (acrPerc > 0) total += (total * acrPerc) / 100;
 
     const acrValor = Math.max(0, parseFloat(acrescimoGlobalValor) || 0);
     total += acrValor;
@@ -269,7 +244,6 @@ export default function PDV() {
       return;
     }
 
-    // VALIDAR CAIXA ABERTO
     if (controlarCaixa && !caixaAberto) {
       showError('Não é possível finalizar venda sem caixa aberto!');
       return;
@@ -292,7 +266,7 @@ export default function PDV() {
       valorPago: valorPago,
       troco: troco,
       observacoes: null,
-      itens: itens.map(item => ({
+      itens: itens.map((item) => ({
         produtoId: item.produto.id,
         quantidade: item.quantidade,
         precoUnitario: item.precoUnitario,
@@ -302,7 +276,7 @@ export default function PDV() {
         acrescimoValor: item.acrescimoValor || 0,
         total: item.total,
       })),
-      pagamentos: pagamentos.map(p => ({
+      pagamentos: pagamentos.map((p) => ({
         formaPagamentoId: p.formaPagamento.id,
         valor: p.valorPago,
         troco: p.troco,
@@ -319,13 +293,12 @@ export default function PDV() {
         showSuccess(`Venda ${res.data.numeroDocumento} finalizada com sucesso!`);
       }
 
-      // Preparar dados completos para o cupom
       const vendaCompleta = {
         ...res.data,
         itens: itens,
         cliente: cliente,
         usuario: usuario,
-        pagamentos: pagamentos.map(p => ({
+        pagamentos: pagamentos.map((p) => ({
           formaPagamento: p.formaPagamento,
           valor: p.valorPago,
         })),
@@ -335,7 +308,6 @@ export default function PDV() {
       setMostrarCupom(true);
       limparVenda();
 
-      // Atualizar status do caixa após venda
       if (controlarCaixa) {
         verificarStatusCaixa();
       }
@@ -360,13 +332,10 @@ export default function PDV() {
   const limparVenda = () => {
     setItens([]);
 
-    // Se tem cliente padrão configurado, recarregar ele
     if (empresa?.clientePadrao) {
       setCliente(empresa.clientePadrao);
-      setCodigoCliente(empresa.clientePadrao.codigo || '');
     } else {
       setCliente(null);
-      setCodigoCliente('');
     }
 
     setCodigoProduto('');
@@ -379,92 +348,120 @@ export default function PDV() {
     inputProdutoRef.current?.focus();
   };
 
+  const totalItens = itens.length;
+  const nomeClienteExibicao = cliente?.nome || 'CONSUMIDOR FINAL';
+  // ====== LAYOUT (TEMA CLARO IGUAL À IMAGEM) ======
   return (
-    <div className="h-screen flex flex-col bg-[#0f1215] text-gray-200">
-      <div className="bg-[#111418] border-b border-[#1f2429] text-gray-200 p-4 flex justify-between items-center shadow-md">
-        <div className="flex items-center gap-4">
-          {empresa?.logoPath && (
-            <img
-              src={`http://localhost:8080/uploads/logos/${empresa.logoPath}`}
-              alt="Logo"
-              className="h-10 w-auto opacity-90"
-            />
-          )}
-          <h1 className="text-xl font-semibold tracking-wide text-white">
+    <div className="h-screen flex flex-col bg-[#f5f7fa] text-gray-900 overflow-hidden">
+      {/* TOPO */}
+      <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-md bg-emerald-500 flex items-center justify-center text-white">
+            🧾
+          </div>
+          <span className="text-xl font-semibold">
             {empresa?.nomeFantasia || 'Caixa Fácil'}
-          </h1>
-
-          {controlarCaixa && (
-            <div
-              className={`px-3 py-1 rounded font-bold text-xs ${
-                caixaAberto ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'
-              }`}
-            >
-              {caixaAberto ? 'CAIXA ABERTO' : 'CAIXA FECHADO'}
-            </div>
-          )}
+          </span>
         </div>
 
-        <div className="flex gap-3 items-center text-sm">
-          <span className="mr-2 text-gray-400">Operador: {usuario?.nome}</span>
+        <div className="flex items-center gap-6 text-sm text-gray-700">
+          <span>Usuário: {usuario?.nome || 'Administrador'}</span>
 
-          {controlarCaixa && (
-            <button
-              onClick={() => navigate('/caixa')}
-              className="px-4 py-2 rounded bg-[#1b1f24] text-green-400 border border-[#2a2f35] hover:bg-[#22272d]"
-            >
-              💰 Caixa
-            </button>
-          )}
+          <button
+            onClick={() => navigate('/estoque/consulta')}
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50"
+          >
+            Estoque
+          </button>
 
           <button
             onClick={() => navigate('/vendas')}
-            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50"
           >
             Vendas
           </button>
+
           <button
             onClick={() => navigate('/cadastros')}
-            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50"
           >
             Cadastros
           </button>
 
           <button
-            onClick={() => navigate('/estoque/consulta')}
-            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
+            onClick={() => navigate('/configuracao')}
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 flex items-center gap-1"
           >
-            📦 Estoque
+            <span>Configuração</span>
+            <span>▾</span>
           </button>
 
-          <button
-            onClick={() => navigate('/configuracao')}
-            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
-          >
-            ⚙️ Configuração
-          </button>
           <button
             onClick={() => {
               localStorage.removeItem('usuario');
               navigate('/');
             }}
-            className="bg-red-600/20 text-red-400 px-4 py-2 rounded border border-red-600/40 hover:bg-red-600/30"
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-50 flex items-center gap-1"
           >
             Sair
+          </button>
+
+        </div>
+      </header>
+
+      {/* MENU INFERIOR DO HEADER */}
+      <div className="mx-6 mt-3 bg-white border border-gray-200 rounded-lg px-6 py-2 flex items-center justify-between text-sm shadow-sm">
+        <div className="flex items-center gap-3">
+          <button className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 flex items-center gap-2">
+            <span className="font-semibold">F2</span>
+            <span>Buscar Produto</span>
+          </button>
+
+          <button className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 flex items-center gap-2">
+            <span className="font-semibold">F3</span>
+            <span>Cliente</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
+            Status:{' '}
+            <span
+              className={
+                caixaAberto
+                  ? 'text-emerald-600 font-semibold'
+                  : 'text-red-500 font-semibold'
+              }
+            >
+              {caixaAberto ? 'Aberto' : 'Fechado'}
+            </span>
+          </span>
+
+          <button
+            onClick={() => navigate('/caixa')}
+            className="px-3 py-1.5 rounded-md border border-emerald-500 text-emerald-600 bg-white hover:bg-emerald-50 flex items-center gap-2"
+          >
+            <span className="font-semibold">F10</span>
+            <span>{caixaAberto ? 'Fechar Caixa' : 'Abrir Caixa'}</span>
           </button>
         </div>
       </div>
 
-      <div className="flex-1 flex p-4 gap-4">
-        <div className="flex-1 flex flex-col gap-4">
-          <div className="bg-[#111418] p-4 rounded border border-[#1f2429] shadow">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold mb-1 text-gray-400">
-                  CÓDIGO DO PRODUTO (F1)
+      {/* CONTEÚDO */}
+      <div className="flex-1 flex flex-col px-6 pt-4 pb-2 gap-3 min-h-0">
+        <div className="flex-1 flex gap-4 min-h-0">
+          {/* COLUNA ESQUERDA */}
+          <div className="flex-1 flex flex-col gap-3">
+            {/* CARD DE CÓDIGO / CLIENTE */}
+            <div className="flex gap-4">
+              {/* Campo principal de código */}
+              <div className="flex-1 bg-white border border-[#e4e7ec] rounded-lg shadow-sm p-4">
+                <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  Código / Leitor de Barras (F1)
                 </label>
-                <div className="flex gap-2 items-center">
-                  <div className="flex-1 flex gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center px-3 py-2 rounded-md border border-gray-300 bg-white flex-1">
+                    <span className="mr-2 text-gray-500">▌▌▌</span>
                     <input
                       ref={inputProdutoRef}
                       type="text"
@@ -473,232 +470,229 @@ export default function PDV() {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') buscarProduto(codigoProduto);
                       }}
-                      className="flex-1 px-3 py-2 rounded bg-[#0d0f12] border border-[#2a2f35] text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40"
-                      placeholder="Digite o código ou use o leitor..."
-                      autoFocus
+                      placeholder="Digite o código ou use o leitor"
+                      className="flex-1 bg-transparent outline-none text-sm"
                     />
-                    <button
-                      onClick={() => buscarProduto(codigoProduto)}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
-                    >
+                  </div>
+                </div>
+              </div>
+
+              {/* Código leitor + cliente */}
+              <div className="w-72 bg-white border border-[#e4e7ec] rounded-lg shadow-sm p-4 flex flex-col gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                    Código Leitor de Barras (F1)
+                  </label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value="000001"
+                      readOnly
+                      className="flex-1 px-3 py-2 rounded-md border border-emerald-500 bg-emerald-50 text-emerald-600 font-semibold text-sm"
+                    />
+                    <button className="w-10 h-10 rounded-md border border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center">
                       🔍
                     </button>
                   </div>
+                </div>
 
-                  {produtoAtual?.fotoPath && (
-                    <div className="w-20 h-20 border-2 border-[#2a2f35] rounded overflow-hidden flex items-center justify-center bg-[#0d0f12]">
-                      <img
-                        src={`http://localhost:8080/uploads/produtos/${produtoAtual.fotoPath}`}
-                        alt="Foto do Produto"
-                        className="max-w-full max-h-full object-contain"
-                      />
-                    </div>
-                  )}
+                <div>
+                  <span className="text-xs text-gray-600">Cliente: </span>
+                  <span className="text-xs font-semibold text-emerald-600">
+                    {nomeClienteExibicao.toUpperCase()}
+                  </span>
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-1 text-gray-400">
-                  CÓDIGO DO CLIENTE
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={codigoCliente}
-                    onChange={(e) => setCodigoCliente(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') buscarCliente(codigoCliente);
-                    }}
-                    className="flex-1 px-3 py-2 rounded bg-[#0d0f12] border border-[#2a2f35] text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40"
-                    placeholder="Opcional"
-                  />
-                  <button
-                    onClick={() => buscarCliente(codigoCliente)}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
-                  >
-                    🔍
-                  </button>
-                </div>
-                {cliente && (
-                  <div className="mt-2 text-xs text-green-400 font-semibold">
-                    Cliente: {cliente.nome}
+            {/* TABELA DE ITENS */}
+            <div className="flex-1 bg-white border border-[#e4e7ec] rounded-lg shadow-sm flex flex-col min-h-0 overflow-hidden">
+              {/* CABEÇALHO */}
+              <div className="grid grid-cols-9 gap-2 px-4 py-2 border-b border-gray-200 bg-[#f5f7fa] text-xs font-semibold text-gray-600">
+                <div>Seq</div>
+                <div className="col-span-2">Descrição</div>
+                <div className="text-right">Qtd</div>
+                <div className="text-right">Preço Unit.</div>
+                <div className="text-right">Total</div>
+                <div className="text-right">Desc %</div>
+                <div className="text-right">Desc R$</div>
+                <div className="text-right">Acrés R$</div>
+              </div>
+
+              {/* LINHAS */}
+              <div className="flex-1 text-xs overflow-y-auto min-h-0">
+                {itens.length === 0 && (
+                  <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+                    No aguardo de produtos...
                   </div>
                 )}
+
+                {itens.map((item, index) => (
+                  <div
+                    key={index}
+                    className={`grid grid-cols-9 gap-2 px-4 py-2 border-b border-gray-100 cursor-pointer ${itemSelecionado === index ? 'bg-emerald-50' : 'bg-white'
+                      }`}
+                    onClick={() => setItemSelecionado(index)}
+                  >
+                    <div className="flex items-center">{index + 1}</div>
+                    <div className="col-span-2 flex items-center text-gray-800 truncate">
+                      {item.produto.descricao}
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        value={item.quantidade}
+                        onChange={(e) => atualizarQuantidade(index, e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                        min="0"
+                        step="0.001"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end text-gray-800">
+                      {item.precoUnitario.toFixed(2)}
+                    </div>
+
+                    <div className="flex items-center justify-end text-gray-800">
+                      {item.total.toFixed(2)}
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        value={item.descontoPercentual || 0}
+                        onChange={(e) => atualizarDesconto(index, 'perc', e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        value={(item.descontoValor || 0).toFixed(2)}
+                        onChange={(e) => atualizarDesconto(index, 'valor', e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                        min="0"
+                      />
+                    </div>
+
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        value={(item.acrescimoValor || 0).toFixed(2)}
+                        onChange={(e) => atualizarAcrescimo(index, 'valor', e.target.value)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="flex-1 bg-[#111418] rounded border border-[#1f2429] overflow-hidden flex flex-col">
-            <div className="bg-[#1a1f24] p-2 font-bold grid grid-cols-12 gap-2 text-xs text-gray-400 border-b border-[#2a2f35]">
-              <div className="col-span-1">QTD.</div>
-              <div className="col-span-3">DESCRIÇÃO</div>
-              <div className="col-span-1">PREÇO UNIT.</div>
-              <div className="col-span-1">DESC %</div>
-              <div className="col-span-1">DESC R$</div>
-              <div className="col-span-1">ACRÉS %</div>
-              <div className="col-span-1">ACRÉS R$</div>
-              <div className="col-span-2 text-right">TOTAL</div>
-            </div>
+          {/* COLUNA DIREITA – RESUMO */}
+          <div className="w-80 flex flex-col gap-3">
+            <div className="bg-white border border-[#e4e7ec] rounded-lg shadow-sm p-4 text-sm space-y-3">
+              <div className="flex items-center justify-between text-gray-700">
+                <span>Subtotal</span>
+                <span className="font-semibold">R$ {calcularSubtotal().toFixed(2)}</span>
+              </div>
 
-            <div className="flex-1 overflow-y-auto">
-              {itens.map((item, index) => (
-                <div
-                  key={index}
-                  className={`grid grid-cols-12 gap-2 p-2 border-b border-[#1f2429] cursor-pointer hover:bg-[#161b20] transition ${
-                    itemSelecionado === index ? 'bg-[#1e252b]' : ''
-                  }`}
-                  onClick={() => setItemSelecionado(index)}
-                >
-                  <div className="col-span-1 text-sm">{item.quantidade}</div>
-                  <div className="col-span-3 text-xs truncate">{item.produto.descricao}</div>
-                  <div className="col-span-1">
-                    <input
-                      type="number"
-                      value={item.quantidade}
-                      onChange={(e) => atualizarQuantidade(index, e.target.value)}
-                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                      step="0.001"
-                      min="0"
-                    />
-                  </div>
-                  <div className="col-span-1 text-right text-xs text-gray-200">
-                    {item.precoUnitario.toFixed(2)}
-                  </div>
-                  <div className="col-span-1">
-                    <input
-                      type="number"
-                      value={item.descontoPercentual || 0}
-                      onChange={(e) => atualizarDesconto(index, 'perc', e.target.value)}
-                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <input
-                      type="number"
-                      value={(item.descontoValor || 0).toFixed(2)}
-                      onChange={(e) => atualizarDesconto(index, 'valor', e.target.value)}
-                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                      min="0"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <input
-                      type="number"
-                      value={item.acrescimoPercentual || 0}
-                      onChange={(e) => atualizarAcrescimo(index, 'perc', e.target.value)}
-                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                      min="0"
-                    />
-                  </div>
-                  <div className="col-span-1">
-                    <input
-                      type="number"
-                      value={(item.acrescimoValor || 0).toFixed(2)}
-                      onChange={(e) => atualizarAcrescimo(index, 'valor', e.target.value)}
-                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                      min="0"
-                    />
-                  </div>
-                  <div className="col-span-2 text-right font-bold text-green-400 text-sm">
-                    R$ {item.total.toFixed(2)}
-                  </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label className="block mb-1 text-gray-600">Desc. Global %</label>
+                  <input
+                    type="number"
+                    value={descontoGlobalPerc}
+                    onChange={(e) => setDescontoGlobalPerc(e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    min="0"
+                    max="100"
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
+                <div>
+                  <label className="block mb-1 text-gray-600">Desc. R$</label>
+                  <input
+                    type="number"
+                    value={descontoGlobalValor}
+                    onChange={(e) => setDescontoGlobalValor(e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    min="0"
+                  />
+                </div>
+              </div>
 
-        <div className="w-96 flex flex-col gap-4">
-          <div className="bg-[#111418] p-4 rounded border border-[#1f2429] shadow space-y-3 text-gray-200">
-            <div className="flex justify-between text-xs text-gray-400">
-              <span>Subtotal:</span>
-              <span className="font-bold text-gray-100">
-                R$ {calcularSubtotal().toFixed(2)}
-              </span>
-            </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <label className="block mb-1 text-gray-600">Acrés. Global %</label>
+                  <input
+                    type="number"
+                    value={acrescimoGlobalPerc}
+                    onChange={(e) => setAcrescimoGlobalPerc(e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-1 text-gray-600">Acrés. R$</label>
+                  <input
+                    type="number"
+                    value={acrescimoGlobalValor}
+                    onChange={(e) => setAcrescimoGlobalValor(e.target.value)}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    min="0"
+                  />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <label className="text-[11px] text-gray-400">Desc. Global %</label>
+              <div className="text-xs">
+                <label className="block mb-1 text-gray-600">Frete</label>
                 <input
                   type="number"
-                  value={descontoGlobalPerc}
-                  onChange={(e) => setDescontoGlobalPerc(e.target.value)}
-                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                  min="0"
-                  max="100"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] text-gray-400">Desc. Global R$</label>
-                <input
-                  type="number"
-                  value={descontoGlobalValor}
-                  onChange={(e) => setDescontoGlobalValor(e.target.value)}
-                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                  min="0"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] text-gray-400">Acrés. Global %</label>
-                <input
-                  type="number"
-                  value={acrescimoGlobalPerc}
-                  onChange={(e) => setAcrescimoGlobalPerc(e.target.value)}
-                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                  min="0"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] text-gray-400">Acrés. Global R$</label>
-                <input
-                  type="number"
-                  value={acrescimoGlobalValor}
-                  onChange={(e) => setAcrescimoGlobalValor(e.target.value)}
-                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
+                  value={frete}
+                  onChange={(e) => setFrete(e.target.value)}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
                   min="0"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="text-[11px] text-gray-400">Frete</label>
-              <input
-                type="number"
-                value={frete}
-                onChange={(e) => setFrete(e.target.value)}
-                className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
-                min="0"
-              />
-            </div>
-
-            <div className="border-t border-[#1f2429] pt-3 mt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-base font-semibold text-gray-300">TOTAL:</span>
-                <span className="text-2xl font-bold text-green-400">
-                  R$ {calcularTotal().toFixed(2)}
-                </span>
+              <div className="border-t border-gray-200 pt-3 mt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-semibold text-gray-700">Total</span>
+                  <span className="text-2xl font-bold text-emerald-600">
+                    R$ {calcularTotal().toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col gap-2">
             <button
               onClick={abrirModalPagamento}
-              className="bg-green-600 text-white font-bold py-4 px-4 rounded hover:bg-green-500 text-lg shadow-lg shadow-green-600/20"
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-lg text-lg shadow-sm"
             >
-              F2 - Finalizar Venda
+              F6 – Finalizar Venda
             </button>
+
             <button
               onClick={limparVenda}
-              className="bg-red-600/30 text-red-400 font-bold py-3 px-4 rounded border border-red-600/40 hover:bg-red-600/40"
+              className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2.5 rounded-lg border border-red-200 text-sm"
             >
               Cancelar Venda
             </button>
           </div>
         </div>
+      </div>
+
+      {/* RODAPÉ FIXO DO TOTAL */}
+      <div className="w-full bg-white border-t border-gray-300 shadow-md px-6 py-3 flex items-center justify-between text-lg font-semibold">
+        <span className="text-gray-700">Total da Venda:</span>
+        <span className="text-emerald-600 font-bold">
+          R$ {calcularTotal().toFixed(2)}
+        </span>
       </div>
 
       {mostrarModalPagamento && (
