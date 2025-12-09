@@ -380,37 +380,38 @@ export default function PDV() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
-      <div className="bg-primary text-white p-4 flex justify-between items-center">
+    <div className="h-screen flex flex-col bg-[#0f1215] text-gray-200">
+      <div className="bg-[#111418] border-b border-[#1f2429] text-gray-200 p-4 flex justify-between items-center shadow-md">
         <div className="flex items-center gap-4">
           {empresa?.logoPath && (
             <img
               src={`http://localhost:8080/uploads/logos/${empresa.logoPath}`}
               alt="Logo"
-              className="h-12 w-auto"
+              className="h-10 w-auto opacity-90"
             />
           )}
-          <h1 className="text-2xl font-bold">
-            {empresa?.nomeFantasia || 'VendeJá PDV'}
+          <h1 className="text-xl font-semibold tracking-wide text-white">
+            {empresa?.nomeFantasia || 'Caixa Fácil'}
           </h1>
 
-          {/* INDICADOR DE CAIXA */}
           {controlarCaixa && (
-            <div className={`px-3 py-1 rounded font-bold text-sm ${caixaAberto ? 'bg-green-500' : 'bg-red-500'
-              }`}>
+            <div
+              className={`px-3 py-1 rounded font-bold text-xs ${
+                caixaAberto ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'
+              }`}
+            >
               {caixaAberto ? 'CAIXA ABERTO' : 'CAIXA FECHADO'}
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 items-center">
-          <span className="mr-4">Operador: {usuario?.nome}</span>
+        <div className="flex gap-3 items-center text-sm">
+          <span className="mr-2 text-gray-400">Operador: {usuario?.nome}</span>
 
-          {/* BOTÃO CAIXA */}
           {controlarCaixa && (
             <button
               onClick={() => navigate('/caixa')}
-              className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100 font-bold"
+              className="px-4 py-2 rounded bg-[#1b1f24] text-green-400 border border-[#2a2f35] hover:bg-[#22272d]"
             >
               💰 Caixa
             </button>
@@ -418,28 +419,27 @@ export default function PDV() {
 
           <button
             onClick={() => navigate('/vendas')}
-            className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
+            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
           >
             Vendas
           </button>
           <button
             onClick={() => navigate('/cadastros')}
-            className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
+            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
           >
             Cadastros
           </button>
 
           <button
             onClick={() => navigate('/estoque/consulta')}
-            className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
+            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
           >
             📦 Estoque
           </button>
 
-
           <button
             onClick={() => navigate('/configuracao')}
-            className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
+            className="px-4 py-2 rounded bg-[#1b1f24] text-gray-300 border border-[#2a2f35] hover:bg-[#22272d]"
           >
             ⚙️ Configuração
           </button>
@@ -448,7 +448,7 @@ export default function PDV() {
               localStorage.removeItem('usuario');
               navigate('/');
             }}
-            className="bg-red-500 px-4 py-2 rounded hover:bg-red-600"
+            className="bg-red-600/20 text-red-400 px-4 py-2 rounded border border-red-600/40 hover:bg-red-600/30"
           >
             Sair
           </button>
@@ -457,10 +457,12 @@ export default function PDV() {
 
       <div className="flex-1 flex p-4 gap-4">
         <div className="flex-1 flex flex-col gap-4">
-          <div className="bg-white p-4 rounded shadow">
+          <div className="bg-[#111418] p-4 rounded border border-[#1f2429] shadow">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold mb-1">Código do Produto</label>
+                <label className="block text-xs font-semibold mb-1 text-gray-400">
+                  CÓDIGO DO PRODUTO (F1)
+                </label>
                 <div className="flex gap-2 items-center">
                   <div className="flex-1 flex gap-2">
                     <input
@@ -471,20 +473,20 @@ export default function PDV() {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') buscarProduto(codigoProduto);
                       }}
-                      className="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="Digite o código ou use o leitor"
+                      className="flex-1 px-3 py-2 rounded bg-[#0d0f12] border border-[#2a2f35] text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40"
+                      placeholder="Digite o código ou use o leitor..."
                       autoFocus
                     />
                     <button
                       onClick={() => buscarProduto(codigoProduto)}
-                      className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600"
+                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
                     >
                       🔍
                     </button>
                   </div>
 
                   {produtoAtual?.fotoPath && (
-                    <div className="w-20 h-20 border-2 border-gray-300 rounded overflow-hidden flex items-center justify-center bg-gray-50">
+                    <div className="w-20 h-20 border-2 border-[#2a2f35] rounded overflow-hidden flex items-center justify-center bg-[#0d0f12]">
                       <img
                         src={`http://localhost:8080/uploads/produtos/${produtoAtual.fotoPath}`}
                         alt="Foto do Produto"
@@ -496,7 +498,9 @@ export default function PDV() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1">Código do Cliente</label>
+                <label className="block text-xs font-semibold mb-1 text-gray-400">
+                  CÓDIGO DO CLIENTE
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -505,18 +509,18 @@ export default function PDV() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') buscarCliente(codigoCliente);
                     }}
-                    className="flex-1 px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 px-3 py-2 rounded bg-[#0d0f12] border border-[#2a2f35] text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40"
                     placeholder="Opcional"
                   />
                   <button
                     onClick={() => buscarCliente(codigoCliente)}
-                    className="bg-primary text-white px-4 py-2 rounded hover:bg-green-600"
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-500"
                   >
                     🔍
                   </button>
                 </div>
                 {cliente && (
-                  <div className="mt-2 text-sm text-primary font-semibold">
+                  <div className="mt-2 text-xs text-green-400 font-semibold">
                     Cliente: {cliente.nome}
                   </div>
                 )}
@@ -524,40 +528,40 @@ export default function PDV() {
             </div>
           </div>
 
-          <div className="flex-1 bg-white rounded shadow overflow-hidden flex flex-col">
-            <div className="bg-gray-200 p-2 font-bold grid grid-cols-12 gap-2 text-sm">
-              <div className="col-span-1">Seq</div>
-              <div className="col-span-3">Produto</div>
-              <div className="col-span-1">Qtd</div>
-              <div className="col-span-1">Preço</div>
-              <div className="col-span-1">Desc%</div>
-              <div className="col-span-1">Desc R$</div>
-              <div className="col-span-1">Acr%</div>
-              <div className="col-span-1">Acr R$</div>
-              <div className="col-span-2">Total</div>
+          <div className="flex-1 bg-[#111418] rounded border border-[#1f2429] overflow-hidden flex flex-col">
+            <div className="bg-[#1a1f24] p-2 font-bold grid grid-cols-12 gap-2 text-xs text-gray-400 border-b border-[#2a2f35]">
+              <div className="col-span-1">QTD.</div>
+              <div className="col-span-3">DESCRIÇÃO</div>
+              <div className="col-span-1">PREÇO UNIT.</div>
+              <div className="col-span-1">DESC %</div>
+              <div className="col-span-1">DESC R$</div>
+              <div className="col-span-1">ACRÉS %</div>
+              <div className="col-span-1">ACRÉS R$</div>
+              <div className="col-span-2 text-right">TOTAL</div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
               {itens.map((item, index) => (
                 <div
                   key={index}
-                  className={`grid grid-cols-12 gap-2 p-2 border-b cursor-pointer hover:bg-gray-50 ${itemSelecionado === index ? 'bg-blue-100' : ''
-                    }`}
+                  className={`grid grid-cols-12 gap-2 p-2 border-b border-[#1f2429] cursor-pointer hover:bg-[#161b20] transition ${
+                    itemSelecionado === index ? 'bg-[#1e252b]' : ''
+                  }`}
                   onClick={() => setItemSelecionado(index)}
                 >
-                  <div className="col-span-1">{index + 1}</div>
-                  <div className="col-span-3 text-sm">{item.produto.descricao}</div>
+                  <div className="col-span-1 text-sm">{item.quantidade}</div>
+                  <div className="col-span-3 text-xs truncate">{item.produto.descricao}</div>
                   <div className="col-span-1">
                     <input
                       type="number"
                       value={item.quantidade}
                       onChange={(e) => atualizarQuantidade(index, e.target.value)}
-                      className="w-full px-2 py-1 border rounded text-right"
+                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                       step="0.001"
                       min="0"
                     />
                   </div>
-                  <div className="col-span-1 text-right text-sm">
+                  <div className="col-span-1 text-right text-xs text-gray-200">
                     {item.precoUnitario.toFixed(2)}
                   </div>
                   <div className="col-span-1">
@@ -565,7 +569,7 @@ export default function PDV() {
                       type="number"
                       value={item.descontoPercentual || 0}
                       onChange={(e) => atualizarDesconto(index, 'perc', e.target.value)}
-                      className="w-full px-2 py-1 border rounded text-right text-sm"
+                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                       min="0"
                       max="100"
                     />
@@ -575,7 +579,7 @@ export default function PDV() {
                       type="number"
                       value={(item.descontoValor || 0).toFixed(2)}
                       onChange={(e) => atualizarDesconto(index, 'valor', e.target.value)}
-                      className="w-full px-2 py-1 border rounded text-right text-sm"
+                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                       min="0"
                     />
                   </div>
@@ -584,7 +588,7 @@ export default function PDV() {
                       type="number"
                       value={item.acrescimoPercentual || 0}
                       onChange={(e) => atualizarAcrescimo(index, 'perc', e.target.value)}
-                      className="w-full px-2 py-1 border rounded text-right text-sm"
+                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                       min="0"
                     />
                   </div>
@@ -593,11 +597,11 @@ export default function PDV() {
                       type="number"
                       value={(item.acrescimoValor || 0).toFixed(2)}
                       onChange={(e) => atualizarAcrescimo(index, 'valor', e.target.value)}
-                      className="w-full px-2 py-1 border rounded text-right text-sm"
+                      className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                       min="0"
                     />
                   </div>
-                  <div className="col-span-2 text-right font-bold text-primary">
+                  <div className="col-span-2 text-right font-bold text-green-400 text-sm">
                     R$ {item.total.toFixed(2)}
                   </div>
                 </div>
@@ -607,71 +611,73 @@ export default function PDV() {
         </div>
 
         <div className="w-96 flex flex-col gap-4">
-          <div className="bg-white p-4 rounded shadow space-y-2">
-            <div className="flex justify-between text-sm">
+          <div className="bg-[#111418] p-4 rounded border border-[#1f2429] shadow space-y-3 text-gray-200">
+            <div className="flex justify-between text-xs text-gray-400">
               <span>Subtotal:</span>
-              <span className="font-bold">R$ {calcularSubtotal().toFixed(2)}</span>
+              <span className="font-bold text-gray-100">
+                R$ {calcularSubtotal().toFixed(2)}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <label className="text-xs">Desc. Global %</label>
+                <label className="text-[11px] text-gray-400">Desc. Global %</label>
                 <input
                   type="number"
                   value={descontoGlobalPerc}
                   onChange={(e) => setDescontoGlobalPerc(e.target.value)}
-                  className="w-full px-2 py-1 border rounded text-right text-sm"
+                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                   min="0"
                   max="100"
                 />
               </div>
               <div>
-                <label className="text-xs">Desc. Global R$</label>
+                <label className="text-[11px] text-gray-400">Desc. Global R$</label>
                 <input
                   type="number"
                   value={descontoGlobalValor}
                   onChange={(e) => setDescontoGlobalValor(e.target.value)}
-                  className="w-full px-2 py-1 border rounded text-right text-sm"
+                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                   min="0"
                 />
               </div>
               <div>
-                <label className="text-xs">Acrés. Global %</label>
+                <label className="text-[11px] text-gray-400">Acrés. Global %</label>
                 <input
                   type="number"
                   value={acrescimoGlobalPerc}
                   onChange={(e) => setAcrescimoGlobalPerc(e.target.value)}
-                  className="w-full px-2 py-1 border rounded text-right text-sm"
+                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                   min="0"
                 />
               </div>
               <div>
-                <label className="text-xs">Acrés. Global R$</label>
+                <label className="text-[11px] text-gray-400">Acrés. Global R$</label>
                 <input
                   type="number"
                   value={acrescimoGlobalValor}
                   onChange={(e) => setAcrescimoGlobalValor(e.target.value)}
-                  className="w-full px-2 py-1 border rounded text-right text-sm"
+                  className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                   min="0"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-xs">Frete</label>
+              <label className="text-[11px] text-gray-400">Frete</label>
               <input
                 type="number"
                 value={frete}
                 onChange={(e) => setFrete(e.target.value)}
-                className="w-full px-2 py-1 border rounded text-right text-sm"
+                className="w-full px-2 py-1 rounded bg-[#0d0f12] border border-[#2a2f35] text-right text-xs text-gray-200"
                 min="0"
               />
             </div>
 
-            <div className="border-t pt-2 mt-2">
+            <div className="border-t border-[#1f2429] pt-3 mt-2">
               <div className="flex justify-between items-center">
-                <span className="text-lg font-bold">TOTAL:</span>
-                <span className="text-2xl font-bold text-primary">
+                <span className="text-base font-semibold text-gray-300">TOTAL:</span>
+                <span className="text-2xl font-bold text-green-400">
                   R$ {calcularTotal().toFixed(2)}
                 </span>
               </div>
@@ -681,13 +687,13 @@ export default function PDV() {
           <div className="flex flex-col gap-2">
             <button
               onClick={abrirModalPagamento}
-              className="bg-primary text-white font-bold py-4 px-4 rounded hover:bg-green-600 text-lg"
+              className="bg-green-600 text-white font-bold py-4 px-4 rounded hover:bg-green-500 text-lg shadow-lg shadow-green-600/20"
             >
               F2 - Finalizar Venda
             </button>
             <button
               onClick={limparVenda}
-              className="bg-red-500 text-white font-bold py-3 px-4 rounded hover:bg-red-600"
+              className="bg-red-600/30 text-red-400 font-bold py-3 px-4 rounded border border-red-600/40 hover:bg-red-600/40"
             >
               Cancelar Venda
             </button>

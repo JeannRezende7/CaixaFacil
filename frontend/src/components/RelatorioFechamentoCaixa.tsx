@@ -264,7 +264,7 @@ export default function RelatorioFechamentoCaixa({ caixa, relatorio, onClose }: 
 
             {/* Rodapé */}
             <div className="mt-4 pt-2 border-t text-center text-xs text-gray-600">
-              <p>VendeJá PDV - {new Date().toLocaleString('pt-BR')}</p>
+              <p>Caixa Fácil - {new Date().toLocaleString('pt-BR')}</p>
             </div>
           </div>
         </div>
