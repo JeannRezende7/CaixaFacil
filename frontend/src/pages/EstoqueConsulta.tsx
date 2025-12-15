@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 import { estoqueService } from "../services/estoqueService";
 import { useNotification } from "../contexts/NotificationContext";
 import { Produto } from "../types";
+import HeaderPadrao from '../components/HeaderPadrao';
 import { getApiBaseUrl } from '../utils/apiConfig';
 
 interface MovimentacaoEstoque {
@@ -18,7 +18,6 @@ interface MovimentacaoEstoque {
 }
 
 export default function EstoqueConsulta() {
-  const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
 
   const [codigoProduto, setCodigoProduto] = useState("");
@@ -160,22 +159,12 @@ export default function EstoqueConsulta() {
   // RENDER
   // ===========================================================
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* HEADER PADRÃO */}
-      <div className="bg-primary text-white p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Consulta e Movimentação de Estoque</h1>
+    <div className="min-h-screen bg-[#f5f7fa]">
+      <HeaderPadrao titulo="Consulta e Movimentação de Estoque" />
 
-        <button
-          onClick={() => navigate("/pdv")}
-          className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Voltar ao PDV
-        </button>
-      </div>
-
-      {/* CONTEÚDO CENTRAL IGUAL AS OUTRAS PÁGINAS */}
+      {/* CONTEÚDO CENTRAL */}
       <div className="p-6 max-w-6xl mx-auto">
-        <div className="bg-white rounded shadow p-6">
+        <div className="bg-white border border-[#e4e7ec] rounded-lg shadow-sm p-6">
           {/* ================= BUSCA ================= */}
           <h2 className="text-xl font-bold mb-4">Buscar Produto</h2>
 
@@ -185,11 +174,12 @@ export default function EstoqueConsulta() {
               onChange={(e) => setCodigoProduto(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && consultar()}
               placeholder="Código ou descrição"
-              className="px-3 py-2 border rounded w-72"
+              className="px-3 py-2 border border-gray-300 rounded-lg w-72 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
+              type="button"
               onClick={consultar}
-              className="px-4 py-2 bg-primary text-white rounded hover:bg-green-700"
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 font-medium transition-colors"
             >
               🔍 Buscar
             </button>
@@ -201,7 +191,7 @@ export default function EstoqueConsulta() {
               <p className="text-lg font-bold">{produto.codigo} — {produto.descricao}</p>
               <p className="text-sm text-gray-700">
                 Estoque atual:{" "}
-                <span className="font-bold text-primary">{produto.estoque}</span>
+                <span className="font-bold text-emerald-600">{produto.estoque}</span>
                 {" · "}
                 Mínimo: {produto.estoqueMinimo}
               </p>
@@ -235,7 +225,7 @@ export default function EstoqueConsulta() {
 
                 <button
                   onClick={aplicarEntrada}
-                  className="mt-4 w-full bg-green-600 text-white rounded py-2 font-bold hover:bg-green-700"
+                  className="mt-4 w-full bg-green-600 text-white rounded py-2 font-bold hover:bg-emerald-500"
                 >
                   Confirmar Entrada
                 </button>

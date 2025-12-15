@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { produtoService, clienteService, cadastrosService } from '../services/api';
 import { Produto, Cliente, Categoria, Usuario, FormaPagamento } from '../types';
 import { useNotification } from '../contexts/NotificationContext';
+import HeaderPadrao from '../components/HeaderPadrao';
 import { getApiUrl } from '../utils/apiConfig';
 
 export default function Cadastros() {
   const { showSuccess, showError, showWarning } = useNotification();
-  const navigate = useNavigate();
   const [aba, setAba] = useState<'produtos' | 'clientes' | 'usuarios' | 'categorias' | 'formasPagamento'>('produtos');
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -314,52 +313,64 @@ export default function Cadastros() {
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
-      <div className="bg-primary text-white p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Cadastros</h1>
-        <button
-          onClick={() => navigate('/pdv')}
-          className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Voltar ao PDV
-        </button>
-      </div>
+    <div className="h-screen flex flex-col bg-[#f5f7fa]">
+      <HeaderPadrao titulo="Cadastros" />
 
-      <div className="p-4">
-        <div className="bg-white rounded shadow">
-          <div className="flex border-b overflow-x-auto">
+      <div className="p-6">
+        <div className="bg-white border border-[#e4e7ec] rounded-lg shadow-sm">
+          <div className="flex border-b border-gray-200 overflow-x-auto">
             <button
+              type="button"
               onClick={() => setAba('produtos')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'produtos' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-                }`}
+              className={`px-6 py-3 font-semibold whitespace-nowrap transition-colors ${
+                aba === 'produtos' 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'hover:bg-gray-50 text-gray-700'
+              }`}
             >
               Produtos
             </button>
             <button
+              type="button"
               onClick={() => setAba('clientes')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'clientes' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-                }`}
+              className={`px-6 py-3 font-semibold whitespace-nowrap transition-colors ${
+                aba === 'clientes' 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'hover:bg-gray-50 text-gray-700'
+              }`}
             >
               Clientes
             </button>
             <button
+              type="button"
               onClick={() => setAba('usuarios')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'usuarios' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-                }`}
+              className={`px-6 py-3 font-semibold whitespace-nowrap transition-colors ${
+                aba === 'usuarios' 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'hover:bg-gray-50 text-gray-700'
+              }`}
             >
               Usuários
             </button>
             <button
+              type="button"
               onClick={() => setAba('categorias')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'categorias' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-                }`}
+              className={`px-6 py-3 font-semibold whitespace-nowrap transition-colors ${
+                aba === 'categorias' 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'hover:bg-gray-50 text-gray-700'
+              }`}
             >
               Categorias
             </button>
             <button
+              type="button"
               onClick={() => setAba('formasPagamento')}
-              className={`px-6 py-3 font-bold whitespace-nowrap ${aba === 'formasPagamento' ? 'bg-primary text-white' : 'hover:bg-gray-100'
-                }`}
+              className={`px-6 py-3 font-semibold whitespace-nowrap transition-colors ${
+                aba === 'formasPagamento' 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'hover:bg-gray-50 text-gray-700'
+              }`}
             >
               Formas Pagamento
             </button>
@@ -583,7 +594,7 @@ export default function Cadastros() {
                 <div className="flex gap-2">
                   <button
                     onClick={salvarProduto}
-                    className="bg-primary text-white px-6 py-2 rounded hover:bg-green-600 font-bold"
+                    className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-500 font-bold"
                   >
                     {produtoForm.id ? 'Atualizar' : 'Salvar'}
                   </button>
@@ -689,7 +700,7 @@ export default function Cadastros() {
                 <div className="flex gap-2">
                   <button
                     onClick={salvarCliente}
-                    className="bg-primary text-white px-6 py-2 rounded hover:bg-green-600 font-bold"
+                    className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-500 font-bold"
                   >
                     Salvar
                   </button>
@@ -776,7 +787,7 @@ export default function Cadastros() {
                 <div className="flex gap-2">
                   <button
                     onClick={salvarUsuario}
-                    className="bg-primary text-white px-6 py-2 rounded hover:bg-green-600 font-bold"
+                    className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-500 font-bold"
                   >
                     Salvar
                   </button>
@@ -834,7 +845,7 @@ export default function Cadastros() {
                 <div className="flex gap-2">
                   <button
                     onClick={salvarCategoria}
-                    className="bg-primary text-white px-6 py-2 rounded hover:bg-green-600 font-bold"
+                    className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-500 font-bold"
                   >
                     Salvar
                   </button>
@@ -936,7 +947,7 @@ export default function Cadastros() {
                 <div className="flex gap-2">
                   <button
                     onClick={salvarFormaPagamento}
-                    className="bg-primary text-white px-6 py-2 rounded hover:bg-green-600 font-bold"
+                    className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-500 font-bold"
                   >
                     Salvar
                   </button>

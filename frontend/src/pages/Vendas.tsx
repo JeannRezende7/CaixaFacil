@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { vendaService } from '../services/api';
 import { Venda } from '../types';
 import axios from 'axios';
 import CupomNaoFiscal from '../components/CupomNaoFiscal';
+import HeaderPadrao from '../components/HeaderPadrao';
 import { getApiBaseUrl } from '../utils/apiConfig';
 
 export default function Vendas() {
-  const navigate = useNavigate();
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [vendaSelecionada, setVendaSelecionada] = useState<Venda | null>(null);
   const [filtro, setFiltro] = useState('');
@@ -58,21 +57,13 @@ export default function Vendas() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
-      <div className="bg-primary text-white p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Consulta de Vendas</h1>
-        <button
-          onClick={() => navigate('/pdv')}
-          className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Voltar ao PDV
-        </button>
-      </div>
+    <div className="h-screen flex flex-col bg-[#f5f7fa]">
+      <HeaderPadrao titulo="Consulta de Vendas" />
 
-      <div className="flex-1 flex gap-4 p-4 overflow-hidden">
+      <div className="flex-1 flex gap-4 p-6 overflow-hidden">
         {/* Lista de Vendas */}
-        <div className="w-1/2 bg-white rounded shadow flex flex-col">
-          <div className="p-4 border-b">
+        <div className="w-1/2 bg-white border border-[#e4e7ec] rounded-lg shadow-sm flex flex-col">
+          <div className="p-4 border-b border-gray-200">
             <input
               type="text"
               value={filtro}
@@ -97,14 +88,14 @@ export default function Vendas() {
                   <tr
                     key={v.id}
                     onClick={() => setVendaSelecionada(v)}
-                    className={`border-t cursor-pointer hover:bg-blue-50 ${
-                      vendaSelecionada?.id === v.id ? 'bg-blue-100' : ''
+                    className={`border-t cursor-pointer hover:bg-emerald-50 ${
+                      vendaSelecionada?.id === v.id ? 'bg-emerald-100' : ''
                     }`}
                   >
                     <td className="p-2">{v.numeroDocumento}</td>
                     <td className="p-2 text-sm">{v.dataHora ? formatarData(v.dataHora) : ''}</td>
                     <td className="p-2">{v.cliente?.nome || 'Consumidor'}</td>
-                    <td className="p-2 text-right font-bold text-primary">
+                    <td className="p-2 text-right font-bold text-emerald-600">
                       R$ {v.total.toFixed(2)}
                     </td>
                   </tr>
@@ -116,13 +107,13 @@ export default function Vendas() {
           <div className="p-4 border-t bg-gray-50">
             <div className="flex justify-between items-center">
               <span className="font-bold">Total de Vendas:</span>
-              <span className="text-lg font-bold text-primary">
+              <span className="text-lg font-bold text-emerald-600">
                 {vendasFiltradas.length}
               </span>
             </div>
             <div className="flex justify-between items-center mt-2">
               <span className="font-bold">Valor Total:</span>
-              <span className="text-lg font-bold text-primary">
+              <span className="text-lg font-bold text-emerald-600">
                 R$ {vendasFiltradas.reduce((acc, v) => acc + v.total, 0).toFixed(2)}
               </span>
             </div>
@@ -130,16 +121,17 @@ export default function Vendas() {
         </div>
 
         {/* Detalhes da Venda */}
-        <div className="flex-1 bg-white rounded shadow overflow-y-auto">
+        <div className="flex-1 bg-white border border-[#e4e7ec] rounded-lg shadow-sm overflow-y-auto">
           {vendaSelecionada ? (
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-primary">
+                <h2 className="text-2xl font-bold text-emerald-600">
                   Venda #{vendaSelecionada.numeroDocumento}
                 </h2>
                 <button
+                  type="button"
                   onClick={reimprimir}
-                  className="bg-primary text-white px-6 py-2 rounded hover:bg-green-600 font-bold flex items-center gap-2"
+                  className="bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-500 font-semibold flex items-center gap-2 transition-colors"
                 >
                   🖨️ Reimprimir Cupom
                 </button>
@@ -255,7 +247,7 @@ export default function Vendas() {
                     <span>R$ {vendaSelecionada.frete.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-xl font-bold text-primary border-t pt-2">
+                <div className="flex justify-between text-xl font-bold text-emerald-600 border-t pt-2">
                   <span>TOTAL:</span>
                   <span>R$ {vendaSelecionada.total.toFixed(2)}</span>
                 </div>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useNotification } from '../contexts/NotificationContext';
 import RelatorioFechamentoCaixa from '../components/RelatorioFechamentoCaixa';
+import HeaderPadrao from '../components/HeaderPadrao';
 import { getApiBaseUrl } from '../utils/apiConfig';
 
 interface Usuario {
@@ -287,38 +288,39 @@ export default function CaixaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <div className="bg-primary text-white p-4 flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">💰 Controle de Caixa</h1>
-          {caixaAberto && (
-            <span className="bg-green-500 px-3 py-1 rounded font-bold">CAIXA ABERTO</span>
-          )}
-        </div>
-        <button
-          onClick={() => navigate('/pdv')}
-          className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Voltar ao PDV
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#f5f7fa]">
+      <HeaderPadrao 
+        titulo="Controle de Caixa" 
+        acoes={
+          caixaAberto && (
+            <span className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-semibold text-sm">
+              💰 CAIXA ABERTO
+            </span>
+          )
+        }
+      />
 
       <div className="p-6 max-w-7xl mx-auto">
         {/* Abas */}
-        <div className="bg-white rounded-t shadow flex">
+        <div className="bg-white border border-[#e4e7ec] rounded-t-lg shadow-sm flex">
           <button
+            type="button"
             onClick={() => setAba('atual')}
-            className={`flex-1 px-6 py-3 font-bold ${
-              aba === 'atual' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+            className={`flex-1 px-6 py-3 font-semibold transition-colors ${
+              aba === 'atual' 
+                ? 'bg-emerald-600 text-white' 
+                : 'hover:bg-gray-50 text-gray-700'
             }`}
           >
             Caixa Atual
           </button>
           <button
+            type="button"
             onClick={() => setAba('historico')}
-            className={`flex-1 px-6 py-3 font-bold ${
-              aba === 'historico' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+            className={`flex-1 px-6 py-3 font-semibold transition-colors ${
+              aba === 'historico' 
+                ? 'bg-emerald-600 text-white' 
+                : 'hover:bg-gray-50 text-gray-700'
             }`}
           >
             Histórico
@@ -326,7 +328,7 @@ export default function CaixaPage() {
         </div>
 
         {/* Conteúdo das abas */}
-        <div className="bg-white rounded-b shadow p-6">
+        <div className="bg-white border border-[#e4e7ec] rounded-b-lg shadow-sm p-6">
           {/* ABA CAIXA ATUAL */}
           {aba === 'atual' && (
             <>
@@ -339,7 +341,7 @@ export default function CaixaPage() {
                   </div>
                   <button
                     onClick={() => setModalAbertura(true)}
-                    className="bg-primary text-white px-8 py-3 rounded hover:bg-green-600 font-bold text-lg"
+                    className="bg-emerald-600 text-white px-8 py-3 rounded hover:bg-emerald-500 font-bold text-lg"
                   >
                     🔓 Abrir Caixa
                   </button>
@@ -383,7 +385,7 @@ export default function CaixaPage() {
                         </div>
                         <div className="flex justify-between text-lg font-bold border-t-2 pt-2 mt-2">
                           <span>Saldo Esperado:</span>
-                          <span className="text-primary">R$ {calcularSaldoEsperado().toFixed(2)}</span>
+                          <span className="text-emerald-600">R$ {calcularSaldoEsperado().toFixed(2)}</span>
                         </div>
                       </div>
 
@@ -495,7 +497,7 @@ export default function CaixaPage() {
                           <td className="p-3 text-sm text-right text-red-600 font-bold">
                             R$ {cx.valorSangrias.toFixed(2)}
                           </td>
-                          <td className="p-3 text-sm text-right font-bold text-primary">
+                          <td className="p-3 text-sm text-right font-bold text-emerald-600">
                             R$ {saldoFinal.toFixed(2)}
                           </td>
                           <td className="p-3 text-center">
@@ -509,7 +511,7 @@ export default function CaixaPage() {
                             {cx.status === 'FECHADO' && (
                               <button
                                 onClick={() => visualizarRelatorio(cx.id)}
-                                className="bg-primary text-white px-3 py-1 rounded hover:bg-green-600 text-xs"
+                                className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-500 text-xs"
                               >
                                 📄 Relatório
                               </button>
@@ -575,7 +577,7 @@ export default function CaixaPage() {
             <div className="flex gap-2 mt-6">
               <button
                 onClick={abrirCaixa}
-                className="flex-1 bg-primary text-white px-4 py-2 rounded hover:bg-green-600 font-bold"
+                className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-500 font-bold"
               >
                 Confirmar
               </button>
@@ -622,7 +624,7 @@ export default function CaixaPage() {
                 </div>
                 <div className="flex justify-between border-t-2 pt-2 mt-2 text-lg">
                   <span className="font-bold">Saldo Final:</span>
-                  <span className="font-bold text-primary">R$ {calcularSaldoEsperado().toFixed(2)}</span>
+                  <span className="font-bold text-emerald-600">R$ {calcularSaldoEsperado().toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -710,7 +712,7 @@ export default function CaixaPage() {
             <div className="flex gap-2 mt-6">
               <button
                 onClick={registrarSuprimento}
-                className="flex-1 bg-primary text-white px-4 py-2 rounded hover:bg-green-600 font-bold"
+                className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-500 font-bold"
               >
                 Confirmar
               </button>
@@ -777,7 +779,7 @@ export default function CaixaPage() {
             <div className="flex gap-2 mt-6">
               <button
                 onClick={registrarSangria}
-                className="flex-1 bg-primary text-white px-4 py-2 rounded hover:bg-green-600 font-bold"
+                className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-500 font-bold"
               >
                 Confirmar
               </button>

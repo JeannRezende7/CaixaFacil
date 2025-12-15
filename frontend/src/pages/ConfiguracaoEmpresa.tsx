@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useNotification } from '../contexts/NotificationContext';
+import HeaderPadrao from '../components/HeaderPadrao';
 import { getApiUrl, getApiBaseUrl } from '../utils/apiConfig';
 
 interface Configuracao {
@@ -113,33 +114,31 @@ export default function ConfiguracaoEmpresa() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="bg-primary text-white p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Configurações do Sistema</h1>
-        <button
-          onClick={() => navigate('/pdv')}
-          className="bg-white text-primary px-4 py-2 rounded hover:bg-gray-100"
-        >
-          Voltar ao PDV
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#f5f7fa]">
+      <HeaderPadrao titulo="Configurações do Sistema" />
 
       <div className="p-6 max-w-6xl mx-auto">
-        <div className="bg-white rounded shadow">
+        <div className="bg-white border border-[#e4e7ec] rounded-lg shadow-sm">
           {/* Abas */}
-          <div className="flex border-b">
+          <div className="flex border-b border-gray-200">
             <button
+              type="button"
               onClick={() => setAba('empresa')}
-              className={`px-6 py-3 font-bold ${
-                aba === 'empresa' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+              className={`px-6 py-3 font-semibold transition-colors ${
+                aba === 'empresa' 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'hover:bg-gray-50 text-gray-700'
               }`}
             >
               Dados da Empresa
             </button>
             <button
+              type="button"
               onClick={() => setAba('vendas')}
-              className={`px-6 py-3 font-bold ${
-                aba === 'vendas' ? 'bg-primary text-white' : 'hover:bg-gray-100'
+              className={`px-6 py-3 font-semibold transition-colors ${
+                aba === 'vendas' 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'hover:bg-gray-50 text-gray-700'
               }`}
             >
               Configurações de Vendas
@@ -435,7 +434,7 @@ export default function ConfiguracaoEmpresa() {
             <div className="flex gap-2 mt-6 pt-6 border-t">
               <button
                 onClick={salvar}
-                className="bg-primary text-white px-6 py-2 rounded hover:bg-green-600 font-bold"
+                className="bg-emerald-600 text-white px-6 py-2 rounded hover:bg-emerald-500 font-bold"
               >
                 Salvar Configuração
               </button>
