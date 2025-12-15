@@ -141,25 +141,29 @@ export default function CaixaPage() {
   };
 
   const abrirCaixa = async () => {
-    if (!formAbertura.valorAbertura || parseFloat(formAbertura.valorAbertura) < 0) {
-      showError('Informe um valor válido');
+    const valorAbertura = formAbertura.valorAbertura ? parseFloat(formAbertura.valorAbertura) : 0;
+
+    // Valida se valor é negativo
+    if (valorAbertura < 0) {
+      showError('O valor não pode ser negativo');
       return;
     }
 
-    if (!formAbertura.formaPagamentoId) {
-      showError('Selecione a forma de pagamento');
+    // Se informou valor maior que zero, obriga forma de pagamento
+    if (valorAbertura > 0 && !formAbertura.formaPagamentoId) {
+      showError('Selecione a forma de pagamento para o valor de abertura');
       return;
     }
 
     try {
       await axios.post(`${getApiBaseUrl()}/caixa/abrir`, {
         usuarioId: usuario!.id,
-        valorAbertura: parseFloat(formAbertura.valorAbertura),
-        formaPagamentoId: parseInt(formAbertura.formaPagamentoId),
+        valorAbertura: valorAbertura,
+        formaPagamentoId: formAbertura.formaPagamentoId ? parseInt(formAbertura.formaPagamentoId) : null,
         observacoes: formAbertura.observacoes
       });
 
-      showSuccess('Caixa aberto com sucesso!');
+      showSuccess(valorAbertura === 0 ? 'Caixa aberto zerado!' : 'Caixa aberto com sucesso!');
       setModalAbertura(false);
       setFormAbertura({ valorAbertura: '', formaPagamentoId: '', observacoes: '' });
       verificarStatusCaixa();
@@ -532,42 +536,56 @@ export default function CaixaPage() {
       {modalAbertura && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-            <h2 className="text-xl font-bold mb-4">🔓 Abrir Caixa</h2>
-            
+            <h2 className="text-xl font-bold mb-4">🔓 Abrir Caixa</h2>          
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold mb-1">Valor de Abertura*</label>
+                <label className="block text-sm font-semibold mb-1">Valor de Abertura</label>
                 <input
                   type="number"
                   value={formAbertura.valorAbertura}
                   onChange={(e) => setFormAbertura({ ...formAbertura, valorAbertura: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                  placeholder="0.00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  placeholder="0.00 (deixe vazio para abrir zerado)"
                   step="0.01"
                   min="0"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Deixe vazio ou digite 0 para abrir sem dinheiro
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1">Forma de Pagamento*</label>
+                <label className="block text-sm font-semibold mb-1">
+                  Forma de Pagamento
+                  {formAbertura.valorAbertura && parseFloat(formAbertura.valorAbertura) > 0 && (
+                    <span className="text-red-500"> *</span>
+                  )}
+                </label>
                 <select
                   value={formAbertura.formaPagamentoId}
                   onChange={(e) => setFormAbertura({ ...formAbertura, formaPagamentoId: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
+                  disabled={!formAbertura.valorAbertura || parseFloat(formAbertura.valorAbertura) === 0}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <option value="">Selecione...</option>
                   {formasPagamento.map(fp => (
                     <option key={fp.id} value={fp.id}>{fp.descricao}</option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {!formAbertura.valorAbertura || parseFloat(formAbertura.valorAbertura) === 0
+                    ? 'Desabilitado (sem valor de abertura)'
+                    : 'Obrigatório quando há valor de abertura'
+                  }
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-bold mb-1">Observações</label>
+                <label className="block text-sm font-semibold mb-1">Observações</label>
                 <textarea
                   value={formAbertura.observacoes}
                   onChange={(e) => setFormAbertura({ ...formAbertura, observacoes: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   rows={3}
                   placeholder="Observações sobre a abertura (opcional)"
                 />
@@ -576,17 +594,19 @@ export default function CaixaPage() {
 
             <div className="flex gap-2 mt-6">
               <button
+                type="button"
                 onClick={abrirCaixa}
-                className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-500 font-bold"
+                className="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-500 font-semibold transition-colors"
               >
-                Confirmar
+                Confirmar Abertura
               </button>
               <button
+                type="button"
                 onClick={() => {
                   setModalAbertura(false);
                   setFormAbertura({ valorAbertura: '', formaPagamentoId: '', observacoes: '' });
                 }}
-                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
               >
                 Cancelar
               </button>

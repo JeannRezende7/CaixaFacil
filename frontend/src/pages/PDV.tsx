@@ -116,6 +116,11 @@ export default function PDV() {
         return;
       }
 
+      // Não ativa se controle de caixa habilitado e caixa fechado
+      if (controlarCaixa && !caixaAberto) {
+        return;
+      }
+
       if (e.key === 'F2') {
         e.preventDefault();
         setMostrarBuscaProduto(true);
@@ -127,7 +132,7 @@ export default function PDV() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mostrarModalPagamento, mostrarBuscaProduto, mostrarBuscaCliente, mostrarCupom]);
+  }, [mostrarModalPagamento, mostrarBuscaProduto, mostrarBuscaCliente, mostrarCupom, controlarCaixa, caixaAberto]);
 
   // BUSCA PRODUTO
   const buscarProduto = async (codigo: string) => {
@@ -462,7 +467,8 @@ export default function PDV() {
           <button 
             type="button"
             onClick={() => setMostrarBuscaProduto(true)}
-            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 flex items-center gap-2"
+            disabled={controlarCaixa && !caixaAberto}
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="font-semibold">F2</span>
             <span>Buscar Produto</span>
@@ -471,7 +477,8 @@ export default function PDV() {
           <button 
             type="button"
             onClick={() => setMostrarBuscaCliente(true)}
-            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 flex items-center gap-2"
+            disabled={controlarCaixa && !caixaAberto}
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white hover:bg-gray-100 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span className="font-semibold">F3</span>
             <span>Cliente</span>
@@ -479,31 +486,50 @@ export default function PDV() {
         </div>
 
         <div className="flex items-center gap-4">
-          <span className="text-sm text-gray-600">
-            Status:{' '}
-            <span
-              className={
-                caixaAberto
-                  ? 'text-emerald-600 font-semibold'
-                  : 'text-red-500 font-semibold'
-              }
-            >
-              {caixaAberto ? 'Aberto' : 'Fechado'}
+          {controlarCaixa && (
+            <span className="text-sm text-gray-600">
+              Status:{' '}
+              <span
+                className={
+                  caixaAberto
+                    ? 'text-emerald-600 font-semibold'
+                    : 'text-red-500 font-semibold'
+                }
+              >
+                {caixaAberto ? 'Aberto' : 'Fechado'}
+              </span>
             </span>
-          </span>
+          )}
 
-          <button
-            onClick={() => navigate('/caixa')}
-            className="px-3 py-1.5 rounded-md border border-emerald-500 text-emerald-600 bg-white hover:bg-emerald-50 flex items-center gap-2"
-          >
-            <span className="font-semibold">F10</span>
-            <span>{caixaAberto ? 'Fechar Caixa' : 'Abrir Caixa'}</span>
-          </button>
+          {controlarCaixa && (
+            <button
+              type="button"
+              onClick={() => navigate('/caixa')}
+              className="px-3 py-1.5 rounded-md border border-emerald-500 text-emerald-600 bg-white hover:bg-emerald-50 flex items-center gap-2"
+            >
+              <span className="font-semibold">F10</span>
+              <span>{caixaAberto ? 'Fechar Caixa' : 'Abrir Caixa'}</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* CONTEÚDO */}
       <div className="flex-1 flex flex-col px-6 pt-4 pb-2 gap-3 min-h-0">
+        {/* AVISO CAIXA FECHADO */}
+        {controlarCaixa && !caixaAberto && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+            <span className="text-2xl">🔒</span>
+            <div>
+              <h3 className="font-semibold text-red-700">Caixa Fechado</h3>
+              <p className="text-sm text-red-600">
+                O caixa está fechado. Abra o caixa para realizar vendas.
+                Pressione <span className="font-semibold">F10</span> ou clique em "Abrir Caixa".
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex-1 flex gap-4 min-h-0">
           {/* COLUNA ESQUERDA */}
           <div className="flex-1 flex flex-col gap-3">
@@ -526,7 +552,8 @@ export default function PDV() {
                         if (e.key === 'Enter') buscarProduto(codigoProduto);
                       }}
                       placeholder="Digite o código ou use o leitor"
-                      className="flex-1 bg-transparent outline-none text-sm"
+                      disabled={controlarCaixa && !caixaAberto}
+                      className="flex-1 bg-transparent outline-none text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
                 </div>
@@ -541,18 +568,20 @@ export default function PDV() {
                   <input
                     type="text"
                     placeholder="Código ou CPF..."
+                    disabled={controlarCaixa && !caixaAberto}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         const valor = e.currentTarget.value.trim();
                         if (valor) buscarClienteRapido(valor);
                       }
                     }}
-                    className="flex-1 px-3 py-2 rounded-md border border-gray-300 text-sm focus:border-green-500 focus:outline-none"
+                    className="flex-1 px-3 py-2 rounded-md border border-gray-300 text-sm focus:border-green-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <button 
                     type="button"
                     onClick={() => setMostrarBuscaCliente(true)}
-                    className="w-10 h-10 rounded-md border border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-lg"
+                    disabled={controlarCaixa && !caixaAberto}
+                    className="w-10 h-10 rounded-md border border-gray-300 bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     🔍
                   </button>
@@ -671,7 +700,8 @@ export default function PDV() {
                     type="number"
                     value={descontoGlobalPerc}
                     onChange={(e) => setDescontoGlobalPerc(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    disabled={controlarCaixa && !caixaAberto}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right disabled:opacity-50 disabled:cursor-not-allowed"
                     min="0"
                     max="100"
                   />
@@ -682,7 +712,8 @@ export default function PDV() {
                     type="number"
                     value={descontoGlobalValor}
                     onChange={(e) => setDescontoGlobalValor(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    disabled={controlarCaixa && !caixaAberto}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right disabled:opacity-50 disabled:cursor-not-allowed"
                     min="0"
                   />
                 </div>
@@ -695,7 +726,8 @@ export default function PDV() {
                     type="number"
                     value={acrescimoGlobalPerc}
                     onChange={(e) => setAcrescimoGlobalPerc(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    disabled={controlarCaixa && !caixaAberto}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right disabled:opacity-50 disabled:cursor-not-allowed"
                     min="0"
                   />
                 </div>
@@ -705,7 +737,8 @@ export default function PDV() {
                     type="number"
                     value={acrescimoGlobalValor}
                     onChange={(e) => setAcrescimoGlobalValor(e.target.value)}
-                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                    disabled={controlarCaixa && !caixaAberto}
+                    className="w-full px-2 py-1 border border-gray-300 rounded-md text-right disabled:opacity-50 disabled:cursor-not-allowed"
                     min="0"
                   />
                 </div>
@@ -717,7 +750,8 @@ export default function PDV() {
                   type="number"
                   value={frete}
                   onChange={(e) => setFrete(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-right"
+                  disabled={controlarCaixa && !caixaAberto}
+                  className="w-full px-2 py-1 border border-gray-300 rounded-md text-right disabled:opacity-50 disabled:cursor-not-allowed"
                   min="0"
                 />
               </div>
@@ -733,15 +767,19 @@ export default function PDV() {
             </div>
 
             <button
+              type="button"
               onClick={abrirModalPagamento}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-lg text-lg shadow-sm"
+              disabled={controlarCaixa && !caixaAberto}
+              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-lg text-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               F6 – Finalizar Venda
             </button>
 
             <button
+              type="button"
               onClick={limparVenda}
-              className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2.5 rounded-lg border border-red-200 text-sm"
+              disabled={controlarCaixa && !caixaAberto}
+              className="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2.5 rounded-lg border border-red-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancelar Venda
             </button>
